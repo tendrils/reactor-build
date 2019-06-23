@@ -1,14 +1,22 @@
-# build logging API
+# build logging interface
 
-## API constants
+## constants
 ll_error = 0
 ll_warn = 1
 ll_info = 2
 ll_debug = 3
 ll_trace = 4
 
+## init function
+define f_log_init =
+    $(call f_log_level_define,trace)
+    $(call f_log_level_define,debug)
+    $(call f_log_level_define,info)
+    $(call f_log_level_define,warn)
+    $(call f_log_level_define,error)
+endef
 
-## logger dispatch function
+## logger dispatch functions
 define f_log =
     $(if $(call f_log_level_active,$1),$(call f_do_log,$1,$2,$3))
 endef
@@ -22,12 +30,9 @@ f_log_level_active = $(ll_active_$1)
 
 ## level-define function
 define f_log_level_define =
-    define macro_ll_define =
-        ll_active_$1 := $(shell project/shell/lte $(ll_$1) $(ll_$(LOG_LEVEL)))
-        $(call f_boot_trace_log,inner: ($(ll_$1) $(ll_$(LOG_LEVEL))) $(shell project/shell/lte $(ll_$1) $(ll_$(LOG_LEVEL))))
-    endef
-    
     $(call f_boot_trace_log,f_log_level_define: $1)
     $(eval $(call macro_ll_define,$1))
-    $(call f_boot_trace_log,$$ll_active_$1: $(ll_active_$1))
+endef
+define macro_ll_define =
+    ll_active_$1 := $$(shell $$(SCRIPT_DIR)/shell/lte $$(ll_$1) $$(ll_$(LOG_LEVEL)))
 endef

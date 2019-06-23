@@ -1,5 +1,8 @@
 # standard build goals and pre/post hooks to be overridden
 
+ifndef REACTOR_TASKS
+REACTOR_TASKS = 1
+
 # build
 build: .build-post
 
@@ -64,3 +67,5 @@ help: .help-post
 .help-post: .help-impl
 
 .PHONY: all build test clean clobber help .init
+
+endif

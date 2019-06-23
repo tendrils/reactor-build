@@ -1,9 +1,16 @@
-ifndef REACTOR_PROJECT_COMMON
-REACTOR_PROJECT_COMMON = 1
+ifndef _MODULE_GCC
+_MODULE_GCC = 1
 
-include $(SCRIPT_DIR)/tasks.mk
+## per-module variables- these are unregistered by the module loader,
+## so their values should not be referred to directly
+MODULE_REQUIRES=$(GCC_MODULE_REQUIRES)
 
-include $(MODULE_DIR)/modules.mk
+GCC_MODULE_REQUIRES=
+
+## module load function
+define f_gcc_init =
+    $(call f_init)
+endef
 
 # Use newlib-nano. To disable it, specify USE_NANO=
 USE_NANO=--specs=nano.specs
@@ -41,34 +48,6 @@ C_INCLUDES+=-Iinclude -I$(CONF_DIR) $(PLATFORM_INCLUDES)
 CFLAGS+=-c -Os -flto -ffunction-sections -fdata-sections -ffreestanding $(USE_NANO) $(USE_SEMIHOST) $(PLATFORM_FLAGS) $(C_INCLUDES) 
 CXXFLAGS=$(CFLAGS)
 
-#
-# build step implementations
-#
-.build-impl: .build-pre $(BUILDDIR) $(DISTDIR) $(BUILD_ITEMS)
-
-.clean-impl: .clean-pre ;\
-    $(call f_action_clean, $(BUILD_DIR))
-
-.clobber-impl: .clobber-pre clean
-
-.all-impl: clean build test
-
-.build-tests-impl: $(PRODUCT) .build-tests-pre
-
-.test-impl: build-tests .test-pre
-
-.help-impl: help-pre
-
-f_do_clean = \
-    $(call f_rm,$1)
-
-$(BUILD_DIR): ;\
-    $(call f_mkdir,$^)
-
-$(DIST_DIR): ;\
-    $(call f_mkdir,$(DIST_DIR))
-
-$(OBJ_DIR): ;\
-    $(call f_mkdir,$(OBJ_DIR))
+.INIT_MODULE_GCC := $(call f_gcc_init) $(.INIT)
 
 endif
