@@ -1,15 +1,17 @@
 ifndef _MODULE_RUBY_GEM
 _MODULE_RUBY_GEM = 1
 
+mod_deps_ruby_gem=
+
 ## module load function
 define f_gem_init =
-    RAKE=rake
-    BUNDLE=bundle
+
 endef
 
-## command dispatch function
-f_do_invoke_rake =  $(shell $(RAKE) $1 $2)
+RAKE=rake
+BUNDLE=bundle
 
-.INIT_MODULE_RUBY_GEM := $(call f_gem_init) $(.INIT)
+## command dispatch function
+f_do_invoke_rake = $(shell $(RAKE) $1 $2)
 
 endif

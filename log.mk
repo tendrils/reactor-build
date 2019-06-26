@@ -9,6 +9,7 @@ ll_trace = 4
 
 ## init function
 define f_log_init =
+    $(call f_boot_trace_log,active log level: $(LOG_LEVEL))
     $(call f_log_level_define,trace)
     $(call f_log_level_define,debug)
     $(call f_log_level_define,info)
@@ -34,5 +35,8 @@ define f_log_level_define =
     $(eval $(call macro_ll_define,$1))
 endef
 define macro_ll_define =
+    define f_log_$1
+        $$(call f_log,$1,$$1,$$2)
+    endef
     ll_active_$1 := $$(shell $$(SCRIPT_DIR)/shell/lte $$(ll_$1) $$(ll_$(LOG_LEVEL)))
 endef

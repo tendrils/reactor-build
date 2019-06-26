@@ -25,18 +25,12 @@ AR=$(XC_PREFIX)ar qc $(LTOFLAG)
 RANLIB=$(XC_PREFIX)ranlib $(LTOFLAG)
 
 # Linker configuration
-LDCONF?=sram
-GC=--gc-sections
-MAP=-Map=$(DISTDIR)/$(PRODUCT_STRING).map
-LD_SCRIPT=$(BOARD_DIR)/link_$(LDCONF).ld
 LIBFLAGS=$(MODFLAGS) $(PLATFORM_LIBFLAGS)
-LDFLAGS=$(USE_NANO) $(USE_SEMIHOST) $(PLATFORM_FLAGS) -L $(DISTDIR) -T $(LD_SCRIPT) -Wl,$(GC) -Wl,$(MAP) $(LIBFLAGS)
+LDFLAGS= -L $(DISTDIR) $(LIBFLAGS)
 
 # C Compiler configuration
 C_INCLUDES+=-Iinclude -I$(CONF_DIR) $(PLATFORM_INCLUDES)
-CFLAGS+=-c -Os -flto -ffunction-sections -fdata-sections -ffreestanding $(USE_NANO) $(USE_SEMIHOST) $(PLATFORM_FLAGS) $(C_INCLUDES) 
+CFLAGS+=-c $(C_INCLUDES) 
 CXXFLAGS=$(CFLAGS)
-
-.INIT_MODULE_GCC := $(call f_gcc_init) $(.INIT)
 
 endif

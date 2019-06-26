@@ -51,7 +51,7 @@ include $(SCRIPT_DIR)/log.mk
 # ->  [handler] ($2): the name of the registered action handler;
 #       defaults to 'f_do_[name]' if not specified
 define f_define_build_action =
-    $(call f_log_debug,f_define_build_action: $1 $2)
+    $(call f_log_trace,core,f_define_build_action: $1 $2)
     $(eval $(call m_define_build_action,$1,$2))
 endef
 define m_define_build_action =
@@ -77,26 +77,35 @@ available_rebuild_modules := $(wildcard $(SCRIPT_MODULE_DIR)/*)
 define f_init_load_build_modules =
     $(foreach mod,$(REBUILD_MODULES),\
         $(if $(findstring $(mod),$(available_rebuild_modules)),,\
-            $(call f_boot_failure,ReBuild module $(mod) not installed)))
-
-    $(foreach mod,$(REBUILD_MODULES),\
-        $(call f_init_load_module,$(mod)))
+            $(call f_boot_failure,ReBuild module $(mod) not installed))\
+        $(call f_init_load_build_module,$(mod)))
 endef
 
 define f_init_load_build_module =
-    $(eval $(call m_load_build_module,$1))
+    $(call f_log_trace,core,f_init_load_build_module: $1)
+    $(call f_override_append_if_absent,MODULES_LOADED,$1)
+    $(call f_load_build_module_file,$1)
     $(foreach mod,$(mod_deps_$1),\
         $(if $(findstring $(mod),$(available_rebuild_modules)),,\
-            $(call f_boot_failure,ReBuild module $(mod) not installed [required by module $1])))
+            $(call f_boot_failure,ReBuild module $(mod) not installed [required by module $1]))\
+        $(if $(findstring $(mod),$(MODULES_LOADED)),,\
+            $(call f_init_load_build_module,$(mod))))
     $(call f_$1_init)
+    $(call f_log_debug,core,loaded module: $1)
 endef
-define m_load_build_module =
-    include $1/module.mk
-endef
+m_load_build_module_file = include $(SCRIPT_DIR)/module/$1/module.mk
+m_override_set_symbol = override $1=$2
+m_override_append_to_symbol = override $1+=$2
+f_load_build_module_file = $(eval $(call m_load_build_module_file,$1))
+f_override_set_symbol = $(eval $(call m_override_set_symbol,$1,$2))
+f_override_append_to_symbol = $(eval $(call m_override_append_to_symbol,$1,$2))
+f_override_append_if_absent = $(if $(findstring $2,$($1)),,$(call f_override_append_to_symbol,$1,$2))
 
 define f_do_init =
     $(call f_log_init)
+    $(call f_log_debug,core,logging interface loaded)
     $(call f_init_model)
+    $(call f_log_debug,core,loading ReBuild modules)
     $(call f_init_load_build_modules)
 endef
 

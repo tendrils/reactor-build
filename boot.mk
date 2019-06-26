@@ -5,8 +5,8 @@ define f_boot_log =
     $(info [BOOT] $1)
 endef
 define f_boot_trace_log =
-    $(if $(TRACE), $(info [BOOT][TRACE] $1))
+    $(if $(TRACE), $(info [boot][trace] $1))
 endef
 define f_boot_failure =
-    $(error [BOOT] Fatal error: $1)
+    $(error [boot][error] Fatal error: $1)
 endef
