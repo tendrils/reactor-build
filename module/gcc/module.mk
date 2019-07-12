@@ -1,9 +1,7 @@
 ifndef _MODULE_GCC
 _MODULE_GCC = 1
 
-mod_deps_gcc=$(GCC_MODULE_REQUIRES)
-
-GCC_MODULE_REQUIRES=c_binary
+mod_deps_gcc=c_binary
 
 ## module lifecycle functions
 define f_gcc_init =

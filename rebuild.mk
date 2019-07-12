@@ -1,5 +1,5 @@
-ifndef _REBUILD
-_REBUILD = 1
+ifndef _REBUILD_MAIN
+_REBUILD_MAIN = 1
 
 auto: default
 
@@ -17,9 +17,7 @@ else
 endif
 
 # Set default configuration and resolve project paths
-CONF_DEFAULT_DEFAULT := reference-hardware
-CONF_DEFAULT ?= $(CONF_DEFAULT_DEFAULT)
-CONF ?= $(CONF_DEFAULT)
+CONF_DEFAULT_DEFAULT := reference-platform
 
 PROJECT_BASE       := $(realpath .)
 RESOURCE_BASE      := $(realpath $(BASE)/../../resource)
@@ -27,22 +25,18 @@ CONF_ROOT           = $(BASE)/conf
 CONF_DIR            = $(CONF_ROOT)/$(CONF)
 PLATFORM_DIR        = $(BASE)/platform
 MODULE_DIR          = $(BASE)/module
-SCRIPT_DIR          = $(BASE)/script
+SCRIPT_DIR          = $(BASE)/rebuild
 SCRIPT_MODULE_DIR   = $(SCRIPT_DIR)/module
 
 BUILD_DIR       = $(PROJECT_BASE)/build
 OBJ_DIR         = $(BUILD_DIR)/obj
 DIST_DIR        = $(BUILD_DIR)/dist
 
-include $(SCRIPT_DIR)/boot.mk
-
-# Load optional host and target configuration files
+# Load host and target configuration files
 -include $(CONF_ROOT)/build-host.conf
 include $(CONF_ROOT)/build-host.default.conf
 
-include $(CONF_DIR)/build-target.conf
-
-include $(SCRIPT_DIR)/log.mk
+include $(SCRIPT_DIR)/util.mk
 
 # function: f_define_build_action(name)
 # ->  register an action to be invoked during the build process,
@@ -51,7 +45,7 @@ include $(SCRIPT_DIR)/log.mk
 # ->  [handler] ($2): the name of the registered action handler;
 #       defaults to 'f_do_[name]' if not specified
 define f_define_build_action =
-    $(call f_log_trace,core,f_define_build_action: $1 $2)
+    $(call f_util_log_trace,boot,f_define_build_action: $1 $2)
     $(eval $(call m_define_build_action,$1,$2))
 endef
 define m_define_build_action =
@@ -63,7 +57,7 @@ define m_define_build_action =
     endef
                   
     define f_log_action_$1 =
-        $$(call f_log,info,$1: $$1)
+        $$(call f_util_log,info,$1: $$1)
     endef
 endef
 
@@ -74,39 +68,65 @@ endef
 
 available_rebuild_modules := $(wildcard $(SCRIPT_MODULE_DIR)/*)
 
-define f_init_load_build_modules =
+define f_init_rebuild_compute_dependencies =
+    $(call f_util_set_symbol,REBUILD_EXPLICIT_MODULES,$(REBUILD_MODULES))
     $(foreach mod,$(REBUILD_MODULES),\
-        $(if $(findstring $(mod),$(available_rebuild_modules)),,\
-            $(call f_boot_failure,ReBuild module $(mod) not installed))\
+        $(call f_init_rebuild_compute_module_dependencies,$(mod)))
+endef
+
+define f_init_rebuild_compute_module_dependencies =
+    $(call f_util_log_trace,boot,f_init_rebuild_compute_module_dependencies($1))
+    $(call f_util_log_trace,boot,mod_deps_$1: $(mod_deps_$1))
+    $(call f_util_append_if_absent,REBUILD_MODULES,$1)
+    $(call f_util_load_build_module_file,$1)
+    $(foreach mod,$(mod_deps_$1),\
+        $(if $(findstring $1,$(REBUILD_MODULES)),,\
+            $(call f_override_append_to_symbol,REBUILD_MODULES)\
+            $(call f_init_rebuild_compute_module_dependencies,$(mod))))
+endef
+
+define f_init_rebuild_load_modules =
+    $(call f_util_log_trace,boot,REBUILD_EXPLICIT_MODULES = $(REBUILD_EXPLICIT_MODULES))
+    $(call f_util_log_trace,boot,REBUILD_MODULES = $(REBUILD_MODULES))
+    $(foreach mod,$(REBUILD_EXPLICIT_MODULES),\
         $(call f_init_load_build_module,$(mod)))
 endef
 
 define f_init_load_build_module =
-    $(call f_log_trace,core,f_init_load_build_module: $1)
-    $(call f_override_append_if_absent,MODULES_LOADED,$1)
-    $(call f_load_build_module_file,$1)
+    $(call f_util_log_trace,boot,f_init_load_build_module: $1)
+    $(call f_util_override_append_if_absent,MODULES_LOADED,$1)
+    $(call f_util_override_append_if_absent,mod_deps_$1,base)
     $(foreach mod,$(mod_deps_$1),\
-        $(if $(findstring $(mod),$(available_rebuild_modules)),,\
-            $(call f_boot_failure,ReBuild module $(mod) not installed [required by module $1]))\
         $(if $(findstring $(mod),$(MODULES_LOADED)),,\
             $(call f_init_load_build_module,$(mod))))
+    $(call f_load_build_module_file,$1)
     $(call f_$1_init)
-    $(call f_log_debug,core,loaded module: $1)
+    $(call f_util_log_debug,boot,loaded module: $1)
 endef
-m_load_build_module_file = include $(SCRIPT_DIR)/module/$1/module.mk
-m_override_set_symbol = override $1=$2
-m_override_append_to_symbol = override $1+=$2
-f_load_build_module_file = $(eval $(call m_load_build_module_file,$1))
-f_override_set_symbol = $(eval $(call m_override_set_symbol,$1,$2))
-f_override_append_to_symbol = $(eval $(call m_override_append_to_symbol,$1,$2))
-f_override_append_if_absent = $(if $(findstring $2,$($1)),,$(call f_override_append_to_symbol,$1,$2))
+
+define f_init_load_target_config
+    $(call f_util_log_debug,boot,CONF_DEFAULT = $(CONF_DEFAULT))
+    $(if $(CONF_DEFAULT),,$(call f_util_set_symbol,CONF_DEFAULT,$(CONF_DEFAULT_DEFAULT)))
+    $(call f_util_log_debug,boot,CONF = $(CONF))
+    $(call f_util_export_set_symbol,CONF,$(CONF_DEFAULT))
+endef
 
 define f_do_init =
-    $(call f_log_init)
-    $(call f_log_debug,core,logging interface loaded)
+    $(call f_util_init)
+    $(call f_util_log_debug,boot,logging interface loaded)
+    $(call f_init_load_target_config)
     $(call f_init_model)
-    $(call f_log_debug,core,loading ReBuild modules)
-    $(call f_init_load_build_modules)
+    $(call f_util_log_debug,boot,loading ReBuild modules)
+    $(call f_init_rebuild_compute_dependencies)
+    $(call f_util_override_append_if_absent,REBUILD_MODULES,base)
+    $(call f_init_rebuild_load_modules)
+    $(call f_util_set_symbol,STATUS_INIT,1)
+endef
+
+define f_init =
+    $(call f_util_log_trace,boot,f_init)
+    $(if $(STATUS_INIT),,$(call f_do_init))
+    $(call f_util_log_trace,boot,end f_init)
 endef
 
 include $(SCRIPT_DIR)/tasks.mk
@@ -129,20 +149,13 @@ include $(SCRIPT_DIR)/tasks.mk
 
 .help-impl: .help-pre
 
-f_do_clean = \
-    $(call f_rm,$1)
+f_do_clean = $(call f_rm,$1)
 
-$(BUILD_DIR): ;\
+OUTPUT_DIRS = $(BUILD_DIR) $(DIST_DIR) $(OBJ_DIR)
+
+$(OUTPUT_DIRS): ;\
     $(call f_mkdir,$^)
 
-$(DIST_DIR): ;\
-    $(call f_mkdir,$(DIST_DIR))
-
-$(OBJ_DIR): ;\
-    $(call f_mkdir,$(OBJ_DIR))
-
-.INIT := $(call f_do_init)
-
-.init: ; $(.INIT)
+.init: ; $(call f_do_init)
 
 endif

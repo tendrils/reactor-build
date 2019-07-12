@@ -10,6 +10,4 @@ define f_base_init =
 
 endef
 
-.INIT_MODULE_BASE := $(call f_base_init) $(.INIT)
-
 endif
