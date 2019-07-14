@@ -48,6 +48,7 @@ m_util_set_symbol = $1=$2
 m_util_append_to_symbol = $1+=$2
 
 # define callable macro invocations
+f_util_build_module_dir = $(SCRIPT_MODULE_DIR)/$1
 f_util_load_build_module_file = $(eval $(call m_util_load_build_module_file,$1))
 f_util_load_target_config_file = $(eval $(call m_util_load_target_config_file,$1))
 f_util_set_symbol = $(eval $(call m_util_set_symbol,$1,$2))

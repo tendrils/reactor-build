@@ -1,7 +1,7 @@
 # standard build goals and pre/post hooks to be overridden
 
-ifndef REACTOR_TASKS
-REACTOR_TASKS = 1
+ifndef REACTOR_BASE_TASKS
+REACTOR_BASE_TASKS = 1
 
 # build
 build: .build-post
