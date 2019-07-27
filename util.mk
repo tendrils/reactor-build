@@ -16,23 +16,11 @@ define f_util_init =
     $(call f_util_log_level_define,error)
 endef
 
-define f_util_fatal_error =
-    $(error [error] Fatal error: $1)
-endef
+f_util_fatal_error = $(error [error] Fatal error: $1)
+f_util_log = $(if $(call f_util_log_level_is_active,$1),$(call f_util_do_log,$1,$2,$3))
+f_util_do_log = $(info [$1] ($2): $3)
 
-## logger dispatch functions
-define f_util_log =
-    $(if $(call f_util_log_level_is_active,$1),$(call f_util_do_log,$1,$2,$3))
-endef
-
-define f_util_do_log =
-    $(info [$1] ($2): $3)
-endef
-
-## level-check function
 f_util_log_level_is_active = $(v_util_log_level_enabled_$1)
-
-## level-define function
 f_util_log_level_define = $(eval $(call m_util_log_level_define,$1))
 
 # define utility macros
@@ -47,16 +35,19 @@ m_util_load_target_config_file = include $(CONF_BASE)/$1/build-target.conf
 m_util_set_symbol = $1=$2
 m_util_append_to_symbol = $1+=$2
 
-# define callable macro invocations
 f_util_build_module_dir = $(SCRIPT_MODULE_DIR)/$1
 f_util_load_build_module_file = $(eval $(call m_util_load_build_module_file,$1))
 f_util_load_target_config_file = $(eval $(call m_util_load_target_config_file,$1))
 f_util_set_symbol = $(eval $(call m_util_set_symbol,$1,$2))
 f_util_append_to_symbol = $(eval $(call m_util_append_to_symbol,$1,$2))
-f_util_append_if_absent = $(if $(findstring $2,$($1)),,$(call f_util_append_to_symbol,$1,$2))
+f_util_append_if_absent = $(if $(call f_util_list_contains_string,$2,$($1)),$(call f_util_log_trace,boot,found $1 in $2),$(call f_util_append_to_symbol,$1,$2))
+f_util_export_symbol = $(eval export $1)$(call f_util_log_trace,util,export $1)
 f_util_export_set_symbol = $(eval export $(call m_util_set_symbol,$1,$2))
 f_util_export_append_to_symbol = $(eval export $(call m_util_append_to_symbol,$1,$2))
-f_util_export_append_if_absent = $(if $(findstring $2,$($1)),,$(call f_util_export_append_to_symbol,$1,$2))
+f_util_export_append_if_absent = $(if $(call f_util_list_contains_string,$2,$($1)),,$(call f_util_export_append_to_symbol,$1,$2))
 f_util_override_set_symbol = $(eval override $(call m_util_set_symbol,$1,$2))
 f_util_override_append_to_symbol = $(eval override $(call m_util_append_to_symbol,$1,$2))
-f_util_override_append_if_absent = $(if $(findstring $2,$($1)),,$(call f_util_override_append_to_symbol,$1,$2))
+f_util_override_append_if_absent = $(if $(call f_util_list_contains_string,$2,$($1)),,$(call f_util_override_append_to_symbol,$1,$2))
+
+f_util_string_equals = $(strip $(if $(findstring $(strip $1),$2),$(findstring $(strip $2),$1),))
+f_util_list_contains_string = $(strip $(if $(findstring $1,$2),$(foreach x,$2,$(call f_util_string_equals,$1,$(x))),))
