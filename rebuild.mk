@@ -34,18 +34,14 @@ endef
 define f_init_rebuild_compute_module_dependencies =
     $(call f_util_log_trace,boot,f_init_rebuild_compute_module_dependencies($1))
     $(call f_util_load_build_module_file,$1)
-    $(call f_util_log_trace,boot,loaded $1/module.mk)
     $(if $(call f_util_string_equals,$1,base),,\
         $(call f_util_override_append_if_absent,mod_deps_$1,base))
     $(call f_util_override_append_if_absent,REBUILD_MODULES,$1)
-    $(call f_util_log_trace,boot,mod_deps_$1: [$(mod_deps_$1)])
-    $(call f_util_log_trace,boot,REBUILD_MODULES: [$(REBUILD_MODULES)])
 
     $(foreach mod,$(mod_deps_$1),\
         $(if $(call f_util_list_contains_string,$(mod),$(available_rebuild_modules)),,\
             $(call f_util_fatal_error,module $(mod) not found [required by $1]))\
-        $(if $(strip $(call f_util_list_contains_string,$(mod),$(REBUILD_MODULES))),\
-            $(call f_util_log_trace,boot,$(mod): $(call f_util_list_contains_string,$(mod),$(REBUILD_MODULES))),\
+        $(if $(strip $(call f_util_list_contains_string,$(mod),$(REBUILD_MODULES))),,\
             $(call f_init_rebuild_compute_module_dependencies,$(mod))))
 endef
 
@@ -64,7 +60,6 @@ define f_init_rebuild_load_module =
     $(call f_$1_init)
     $(call f_util_override_append_if_absent,MODULES_LOADED,$(mod))
     $(call f_util_log_debug,boot,loaded module: $1)
-    $(call f_util_log_debug,boot,MODULES_LOADED: [$(MODULES_LOADED)])
 endef
 
 define f_init_load_target_config
