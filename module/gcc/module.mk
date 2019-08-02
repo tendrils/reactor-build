@@ -11,15 +11,18 @@ define f_gcc_init =
 
 endef
 
+# ($1): handle for new toolchain
+# ($2): [optional] cross-compilation target
 define f_gcc_toolchain_define =
-	$(call f_util_set_symbol,GCC_TOOLCHAIN_PROVIDER,$1)
-    $(call f_c_binary_toolchain_define,gcc,$(GCC_TOOLCHAIN_PROVIDER))
+    $(call f_c_binary_toolchain_define,$1)
+	$(call f_util_override_append_if_absent,GCC_TOOLCHAINS,$1)
+    $(if $2,$(call f_gcc_cross_target_set,$1,$2),)
+    $(call f_c_binary_tc_cmd_set,$1,)
 endef
 
-define f_gcc_cross_target_set =
-    $(call f_util_set_symbol,GCC_CROSS_TARGET,$1)
-    $(if $(GCC_CROSS_TARGET),\
-        $(call f_util_override_set_symbol,XC_PREFIX,$(GCC_CROSS_TARGET)-),)
+define f_gcc_tc_cross_target_set =
+    $(call f_util_set_symbol,gcc_cross_target_$1,$2)
+    $(if $2,$(call f_util_override_set_symbol,v_gcc_tc_cmd_$,$(GCC_CROSS_TARGET)-),)
 endef
 
 CC=$(XC_PREFIX)gcc

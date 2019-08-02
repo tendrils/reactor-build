@@ -5,7 +5,7 @@ mod_deps_gcc_cortex_m_metal=gcc_cortex_m
 
 ## module lifecycle functions
 define f_gcc_cortex_m_metal_init =
-    $(call f_gcc_cortex_m_toolchain_define,none)
+    $(call f_gcc_cortex_m_toolchain_define,gcc_cortex_m_metal,none)
 endef
 
 endif

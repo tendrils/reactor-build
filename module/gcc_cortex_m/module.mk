@@ -10,8 +10,8 @@ endef
 
 define f_gcc_cortex_m_toolchain_define =
 
-	$(call f_gcc_toolchain_define,arm-$1-eabi)
-	$(call f_gcc_cross_target_set,arm-$1-eabi)
+	$(call f_gcc_toolchain_define,$1)
+	$(call f_gcc_cross_target_set,$1,arm-$2-eabi)
 endef
 
 # GCC specs- semihosting is enabled by default
@@ -23,7 +23,7 @@ SPEC_HOST=$(SPEC_SEMIHOST)
 GCC_SPECS+=$(SPEC_NANO) $(SPEC_HOST)
 
 # C Compiler configuration
-CFLAGS+= -Os -flto -ffunction-sections -fdata-sections -ffreestanding $(CORTEXM_GCC_SPEC_NANO) $(CORTEXM_GCC_SPEC_SEMIHOST)
+CFLAGS+= -Os -flto -ffunction-sections -fdata-sections -ffreestanding $(GCC_SPECS)
 
 # Linker configuration
 LDCONF=sram
