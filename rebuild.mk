@@ -61,10 +61,50 @@ define f_init_rebuild_load_module =
     $(call f_util_override_append_if_absent,MODULES_LOADED,$(mod))
     $(call f_util_log_debug,boot,loaded module: $1)
 endef
+c_rebuild_default_project_descriptor = project$(c_rebuild_default_project_descriptor_suffix)
+c_rebuild_default_project_descriptor_suffix = .rebuild
+c_rebuild_project_descriptor_fields = \
+    project_name \
+    conf_default \
+    rebuild_modules \
+    subproject_dirs
 
-define f_init_load_target_config
-    $(if $(CONF_DEFAULT),,$(call f_util_set_symbol,CONF_DEFAULT,$(CONF_DEFAULT_DEFAULT)))
-    $(if $(CONF),,$(call f_util_set_symbol,CONF,$(CONF_DEFAULT)))
+define f_init_load_project_descriptors =
+    $(call f_init_load_main_project_descriptor)
+    $(foreach )
+endef
+
+define f_init_load_main_project_descriptor =
+    $(if $(rebuild_project),\
+        $(call f_init_load_project_descriptor_from_file,./$(rebuild_project).rebuild),\
+        $(call f_init_load_project_descriptor_from_file,./$(c_rebuild_default_project_descriptor)))
+    $(call f_util_set_symbol,v_main_project_name,$(project_name))
+endef
+
+# search for project descriptors in the given directory, select one, and load it
+define f_init_load_subproject_descriptor =
+    $(if $(wildcard $1/$1$(c_rebuild_default_project_descriptor_suffix),\
+        $(call f_init_load_project_descriptor_from_file,$1/$1$(c_rebuild_default_project_descriptor_suffix)),\
+        $(if $(wildcard $1/*$(c_rebuild_default_project_descriptor_suffix)),\
+            $(call f_init_load_project_descriptor_from_file,$(firstword $(wildcard $1/*$(c_rebuild_default_project_descriptor_suffix)))),\
+            $(call f_util_fatal_error,init,could not locate project descriptor for project [$1]))))
+endef
+
+# loads contents of file, then copies field values to prefixed field-names,
+# allowing all project descriptors to use the same local field-names
+define f_init_load_project_descriptor_from_file =
+    $(foreach sym,$(c_rebuild_project_descriptor_fields),\
+        $(call f_util_unset_symbol,$(sym)))
+    $(call f_util_load_file,$1)
+    $(foreach sym,$(c_rebuild_project_descriptor_fields),$(if $($(sym)),\
+        $(call f_util_set_symbol,$(v_proj_$(project_name)_$(sym)),$($(sym))),))
+endef
+
+define f_init_load_target_config =
+    $(if $(CONF_DEFAULT),,\
+        $(call f_util_set_symbol,CONF_DEFAULT,$(CONF_DEFAULT_DEFAULT)))
+    $(if $(CONF),,\
+        $(call f_util_set_symbol,CONF,$(CONF_DEFAULT)))
     $(call f_util_export_symbol,CONF)
     $(call f_util_log_debug,boot,CONF = $(CONF))
     $(call f_util_log_debug,boot,CONF_DEFAULT = $(CONF_DEFAULT))
@@ -74,6 +114,7 @@ endef
 define f_do_init =
     $(call f_util_init)
     $(call f_util_log_debug,boot,logging interface loaded)
+    $(call f_init_load_main_project_descriptor)
     $(call f_init_load_target_config)
     $(call f_util_log_debug,boot,loading ReBuild modules)
     $(call f_init_rebuild_compute_dependencies)
@@ -109,6 +150,8 @@ OUTPUT_DIRS = $(BUILD_DIR) $(DIST_DIR) $(OBJ_DIR)
 
 $(OUTPUT_DIRS): ; $(call f_mkdir,$^)
 
-.init: ; $(call f_action_init)
+.init:
+	
+v_init ::= $(call f_action_init)
 
 endif
