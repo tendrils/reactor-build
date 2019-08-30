@@ -30,15 +30,17 @@ define m_util_log_level_define =
     endef
     v_util_log_level_enabled_$1 := $$(shell $$(SCRIPT_DIR)/shell/lte $$(c_util_log_level_$1) $$(c_util_log_level_$(LOG_LEVEL)))
 endef
-m_util_load_build_module_file = include $(SCRIPT_MODULE_DIR)/$1/module.mk
-m_util_load_target_config_file = include $(CONF_BASE)/$1/build-target.conf
+m_util_load_file = include $1
 m_util_set_symbol = $1=$2
 m_util_unset_symbol = undefine $1
 m_util_append_to_symbol = $1+=$2
 
 f_util_build_module_dir = $(SCRIPT_MODULE_DIR)/$1
-f_util_load_build_module_file = $(eval $(call m_util_load_build_module_file,$1))
-f_util_load_target_config_file = $(eval $(call m_util_load_target_config_file,$1))
+f_util_load_file = $(eval $(call m_util_load_file,$1))
+f_util_load_build_module_file =\
+                    $(call f_util_load_file,$(SCRIPT_MODULE_DIR)/$1/module.mk)
+f_util_load_target_config_file =\
+                    $(call f_util_load_file,$(CONF_BASE)/$1/build-target.conf)
 f_util_set_symbol = $(eval $(call m_util_set_symbol,$1,$2))
 f_util_unset_symbol = $(eval $(call m_util_unset_symbol,$1))
 f_util_append_to_symbol = $(eval $(call m_util_append_to_symbol,$1,$2))
