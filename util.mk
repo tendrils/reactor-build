@@ -36,12 +36,12 @@ m_util_unset_symbol = undefine $1
 m_util_append_to_symbol = $1+=$2
 
 f_util_build_module_dir = $(SCRIPT_MODULE_DIR)/$1
-f_util_load_file = $(eval $(call m_util_load_file,$1))
+f_util_load_file = $(call f_util_log_trace,util,f_util_load_file: $1)$(eval $(call m_util_load_file,$1))
 f_util_load_build_module_file =\
                     $(call f_util_load_file,$(SCRIPT_MODULE_DIR)/$1/module.mk)
 f_util_load_target_config_file =\
                     $(call f_util_load_file,$(CONF_BASE)/$1/build-target.conf)
-f_util_set_symbol = $(eval $(call m_util_set_symbol,$1,$2))
+f_util_set_symbol = $(call f_util_log_trace,util,f_util_set_symbol: [$1 = $2])$(eval $(call m_util_set_symbol,$1,$2))
 f_util_unset_symbol = $(eval $(call m_util_unset_symbol,$1))
 f_util_append_to_symbol = $(eval $(call m_util_append_to_symbol,$1,$2))
 f_util_append_if_absent = $(if $(call f_util_list_contains_string,$2,$($1)),$(call f_util_log_trace,boot,found $1 in $2),$(call f_util_append_to_symbol,$1,$2))
