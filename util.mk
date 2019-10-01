@@ -9,11 +9,16 @@ c_util_log_level_trace = 4
 
 ## init function
 define f_util_init =
+    $(call f_util_log_channel_init)
+endef
+
+define f_util_log_channel_init =
     $(call f_util_log_level_define,trace)
     $(call f_util_log_level_define,debug)
     $(call f_util_log_level_define,info)
     $(call f_util_log_level_define,warn)
     $(call f_util_log_level_define,error)
+    $(call f_util_log_trace,boot,primary logging channel initialized)
 endef
 
 f_util_fatal_error = $(error [error] ($1) Fatal error: $2)
@@ -28,7 +33,7 @@ define m_util_log_level_define =
     define f_util_log_$1
         $$(call f_util_log,$1,$$1,$$2)
     endef
-    v_util_log_level_enabled_$1 := $$(shell $$(SCRIPT_DIR)/shell/lte $$(c_util_log_level_$1) $$(c_util_log_level_$(LOG_LEVEL)))
+    v_util_log_level_enabled_$1 := $$(shell $$(rebuild_home)/shell/lte $$(c_util_log_level_$1) $$(c_util_log_level_$(LOG_LEVEL)))
 endef
 m_util_load_file = include $1
 m_util_set_symbol = $1=$2
@@ -37,10 +42,6 @@ m_util_append_to_symbol = $1+=$2
 
 f_util_build_module_dir = $(SCRIPT_MODULE_DIR)/$1
 f_util_load_file = $(call f_util_log_trace,util,f_util_load_file: $1)$(eval $(call m_util_load_file,$1))
-f_util_load_build_module_file =\
-                    $(call f_util_load_file,$(SCRIPT_MODULE_DIR)/$1/module.mk)
-f_util_load_target_config_file =\
-                    $(call f_util_load_file,$(CONF_BASE)/$1/build-target.conf)
 f_util_set_symbol = $(call f_util_log_trace,util,f_util_set_symbol: [$1 = $2])$(eval $(call m_util_set_symbol,$1,$2))
 f_util_unset_symbol = $(eval $(call m_util_unset_symbol,$1))
 f_util_append_to_symbol = $(eval $(call m_util_append_to_symbol,$1,$2))
