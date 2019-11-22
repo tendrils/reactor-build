@@ -1,7 +1,8 @@
 ifndef _MODULE_BASE
 _MODULE_BASE = 1
 
-MOD_DIR_BASE=$(SCRIPT_MODULE_DIR)/base
+include $(_module_dir)/reference.mk
+include $(_module_dir)/resource.mk
 
 rebuild_project_descriptor_fields += \
     project_traits \
@@ -12,10 +13,17 @@ define f_base_init =
     # define abstract project model
     $(call f_base_init_model)
 
+    $(call f_define_project_attr_field,rebuild:resource,vector)
+    $(call f_define_project_attr_field,rebuild:reference,vector)
+
+    # define base project reference type families
+    $(call f_define_type_map,rebuild:resource)
+    $(call f_define_type_map,rebuild:reference)
+
     # define project reference types
-    $(call f_define_project_reftype,rebuild:dependency,\
+    $(call f_define_project_reftype,rebuild:dependency,inherit,\
         f_base_handle_reftype_rebuild_dependency)
-    $(call f_define_project_reftype,rebuild:subproject,\
+    $(call f_define_project_reftype,rebuild:subproject,inherit,\
         f_base_handle_reftype_rebuild_subproject)
 
     # define project traits
@@ -25,7 +33,7 @@ define f_base_init =
         f_base_activate_trait_rebuild_parent)
     
     # set load hook
-    $(call f_rebuild_register_system_load_hook,f_base_system_load_hook)
+    $(call f_core_register_system_load_hook,f_base_system_load_hook)
 endef
 
 define f_base_system_load_hook =
@@ -49,20 +57,27 @@ define f_base_activate_trait_rebuild_parent =
 endef
 
 define f_base_handle_reftype_rebuild_dependency =
-    	$(call f_util_set_symbol,)
+    $(if $(call f_rebuild_dir_is_project,$1),\
+        $(call f_util_append_to_symbol,rebuild_defined_project_dependencies,$1)\
+            $(call f_rebuild_load_dependency_project_descriptor,$1),\
+        $(call f_util_fatal_error,base,\
+                    could not locate project descriptor for project dependency [$1]))
 endef
 
 define f_base_handle_reftype_rebuild_subproject =
-    
+    $(if $(call f_rebuild_dir_is_project,$1),\
+        $(call f_util_append_to_symbol,rebuild_defined_subprojects,$1)\
+            $(call f_rebuild_load_subproject_descriptor,$1),\
+        $(call f_util_fatal_error,base,\
+                    could not locate project descriptor for subproject [$1]))
 endef
 
-# search for project descriptors in the given directory, select one, and load it
 define f_rebuild_load_subproject_descriptor =
-    $(if $(call f_rebuild_dir_is_project,$1),\
-        $(call f_rebuild_load_project_descriptor_from_file_with_prefix,subproject,$1/$(rbproj_name)),\
-            $(call f_util_fatal_error,base,\
-                        could not locate project descriptor for subproject [$1]))
+    $(call f_rebuild_load_project_descriptor_from_file_with_prefix,\
+        $(call f_base_get_prefix,subproject__$1),$1/$(rbproj_name))
 endef
+
+f_base_get_prefix = $(subst /,_,$1)
 
 f_do_clean = $(call f_rm,$1)
 
@@ -106,108 +121,94 @@ define m_define_build_action =
     endef
 endef
 
+define f_define_system_type_map =
+    $(call f_util_log_debug,core,f_define_system_type_map: map-id=[$1])
+    $(call f_util_append_if_absent,rebuild_defined_system_type_maps,$1)
+endef
+
+define f_define_system_type_entry =
+    $(call f_util_log_debug,core,\
+        f_define_system_type_entry: map-id=[$1], type-id=[$2], parent-id=[$3])
+    $(call f_util_append_if_absent,rebuild_defined_system_type_map__$1,$2)
+    $(if $3,$(call f_util_append_if_absent,rebuild_defined_system_type_map_parent__$1__$2,$3),)
+endef
+
 define f_define_project_attr_field =
-    $(call f_util_log_debug,core,f_define_project_attr_field: field-id=[$1], field_type=[$2])
+    $(call f_util_log_debug,core,\
+        f_define_project_attr_field: field-id=[$1], field-is-vector=[$2], field-is-typed=[$3])
     $(call f_util_append_if_absent,rebuild_defined_project_attr_fields,$1)
     $(call f_util_append_if_absent,rebuild_defined_project_attr_field_type__$1,$2)
     $(if $(call f_util_string_equals,scalar,$2),\
-            $(eval $(call m_define_project_attr_field_scalar,$1)),\
+            $(eval $(call m_define_project_attr_field_scalar,$1,$3)),\
         $(if $(call f_util_string_equals,vector,$2),\
-                $(eval $(call m_define_project_attr_field_vector,$1)),\
+                $(eval $(call m_define_project_attr_field_vector,$1,$3)),\
             $(call f_util_fatal_error,core,\
-                attribute field [$1] has invalid type designation [$2])))
+                attribute field [$1] has invalid type designation [$2] (expected: [scalar|vector]))))
 endef
+
+# early-binding variables:
+# ($1): field-id, ($2): field-is-typed
+define m_define_project_attr_field_scalar =
+    f_rebuild_project_attr_value_get__$1 = $(rebuild_project_attr_value__$1__$$1)
+    f_rebuild_project_attr_type_get__$1 = $(rebuild_project_attr_type__$1__$$1)
+
+    # ($$1): project-id, ($$2): attr-type, ($$3): attr-value
+    define f_define_project_attr_value__$1 =
+        $$(call f_util_log_trace,base,\
+            f_define_project_attr_value__$1: project-id=[$$1], attr-type=[$$2], attr-value=[$$3])
+        $$(call f_util_set_symbol,rebuild_project_attr_type__$1__$$1,$$2)
+        $$(call f_util_set_symbol,rebuild_project_attr_value__$1__$$1,$$3)
+        $$(call f_call_project_attr_type_handler__$1,$$1,$$2,$$3)
+    endef
+
+    # ($$1): type-id, ($$2): type-handler
+    define f_define_project_attr_type__$1 =
+        $$(call f_util_log_trace,base,\
+            f_define_project_attr_type__$1: type-id=[$$1], handler=[$$2])
+        $$(call f_util_append_to_symbol,rebuild_defined_project_attr_types__$1,$$1)
+        $$(if $$2,$$(call f_util_set_symbol,\
+            rebuild_attr_type_handler__$1__$$(subst :,_,$$1),$$2),)
+    endef
+
+    # ($$1): project-id, ($$2): attr-type, ($$3): attr-value
+    define f_call_project_attr_type_handler__$1 =
+        $$(if rebuild_attr_type_handler__$1__$$(subst :,_,$$1),\
+            $$(call $$(rebuild_attr_type_handler__$1__$$(subst :,_,$$1)),$$2),)
+    endef
+endef
+
 # TODO: add type validation to f_define_project_attr_value__x
 # ($1): field-id
 define m_define_project_attr_field_vector =
+    f_rebuild_project_attr_value_get__$1 = $(rebuild_project_attr_value__$1__$$1__$$2)
+    f_rebuild_project_attr_type_get__$1 = $(rebuild_project_attr_type__$1__$$1__$$2)
     define f_define_project_attr_value__$1 =
         $$(call f_util_log_trace,base,\
-            f_set_project_attr__$1: project=[$$1], field-id=[$$2], attrtype=[$$3], path=[$$4])
-        $$(call f_util_append_to_symbol,rebuild_defined_project_attrs__$1__$$1,$$2)
-        $$(call f_util_set_symbol,rebuild_project_attr_attrtype__$1__$$1__$$2,$$3)
-        $$(call f_util_set_symbol,rebuild_project_attr__$1__$$1__$$2,$$4)
-        $$(call f_call_attrtype_handler__$1,$$2,$$3)
+            f_define_project_attr_value__$1: project=[$$1], attr-id=[$$2], attrtype=[$$3], path=[$$4])
+        $$(if $$(call f_util_list_contains_string,$$2,rebuild_defined_project_attrs__$1__$$1),,\
+            $$(call f_util_append_to_symbol,rebuild_defined_project_attrs__$1__$$1,$$2))
+        $$(call f_util_set_symbol,rebuild_project_attr_type__$1__$$1__$$2,$$3)
+        $$(call f_util_set_symbol,rebuild_project_attr_value__$1__$$1__$$2,$$4)
+        $$(call f_call_project_attr_type_handler__$1,$$2,$$3)
     endef
     define f_define_project_attr_type__$1 =
         $$(call f_util_log_trace,base,\
-            f_define_project_attrtype__$1: type-id=[$$1], handler=[$$2])
+            f_define_project_attr_type__$1: type-id=[$$1], handler=[$$2])
         $$(call f_util_append_to_symbol,rebuild_defined_project_attr_types__$1,$$1)
         $$(if $$2,$$(call f_util_set_symbol,\
-            rebuild_attrtype_handler__$1__$$(subst :,_,$$1),$$2),)
+            rebuild_attr_type_handler__$1__$$(subst :,_,$$1),$$2),)
     endef
     # ($$1): project-id
-    define f_call_project_attrtype_handler__$1 =
-        $$(if rebuild_attrtype_handler__$1__$$(subst :,_,$$1),\
-            $$(call $$(rebuild_attrtype_handler__$1__$$(subst :,_,$$1)),$$2),)
+    define f_call_project_attr_type_handler__$1 =
+        $$(if rebuild_attr_type_handler__$1__$$(subst :,_,$$1),\
+            $$(call $$(rebuild_attr_type_handler__$1__$$(subst :,_,$$1)),$$2),)
     endef
-endef
-
-define f_define_project_restype =
-    $(call f_util_log_debug,base,f_define_project_restype: id=[$1], handler=[$2])
-    #$(call f_util_append_to_symbol,rebuild_defined_project_restypes,$1)
-    #$(if $2,$(call f_util_set_symbol,rebuild_project_restype_handler__$(subst :,_,$1),$2),)
-    $(call f_define_project_attr_type__rebuild_resource,$1,$2)
-endef
-
-define f_rebuild_call_project_restype_handler =
-    #$(call $(rebuild_restype_handler__$1__$(subst :,_,$2)))
-    $(call $(rebuild_attrtype_handler__rebuild_resource__$(subst :,_,$1)))
-endef
-
-rebuild_defined_project_resources__$1=$()
-
-define f_define_project_resource =
-    $(call f_util_log_debug,base,\
-        f_define_project_resource: project=[$1], id=[$2], restype=[$3], path=[$4])
-    $(call f_util_append_to_symbol,rebuild_defined_project_references__$1,$2)
-    $(call f_util_set_symbol,rebuild_project_resource_restype__$1__$2,$3)
-    $(call f_util_set_symbol,rebuild_project_resource__$1__$2,$4)
-    $(call f_rebuild_call_project_restype_handler,$1,$3)
-endef
-
-define f_rebuild_project_resource_restype =
-    $(rebuild_project_resource_restype__$1__$2)
-endef
-
-# ($1): project-id
-# ($2): resource-id
-define f_rebuild_project_resource =
-    $(rebuild_project_resource__$1__$2)
 endef
 
 define f_rebuild_define_project_resource_root =
     $(call f_util_log_debug,base,\
         f_rebuild_define_project_resource_root: project=[$1], path=[$2])
     $(call f_util_append_if_absent,rebuild_defined_resource_roots__$1,$2)
-endef
-
-define f_define_project_reftype =
-    $(call f_util_log_debug,base,f_define_project_reftype: id=[$1], handler=[$2])
-    $(call f_util_append_to_symbol,rebuild_defined_reftypes,$1)
-    $(if $2,$(call f_util_set_symbol,rebuild_reftype_handler__$(subst :,_,$1),$2),)
-endef
-
-# ($1): project-id
-# ($2): reference-id
-# ($1): reference-type
-define f_rebuild_call_reftype_handler =
-    $(call $(rebuild_reftype_handler__$3),$1,$2)
-endef
-
-define f_define_project_reference =
-    $(call f_util_log_debug,base,f_define_project_reference: project=[$1] id=[$2], reftype=[$3], path=[$4])
-    $(call f_util_append_to_symbol,rebuild_project_defined_refs__$1,$2)
-    $(call f_util_set_symbol,rebuild_project_reference_reftype__$1__$2,$3)
-    $(call f_util_set_symbol,rebuild_project_reference__$1__$2,$4)
-    $(call f_rebuild_call_reftype_handler,$1,$2,$3)
-endef
-
-define f_rebuild_project_reference_reftype =
-    $(rebuild_project_reference_reftype__$1__$2)
-endef
-
-define f_rebuild_project_reference =
-    $(rebuild_project_reference__$1__$2)
 endef
 
 define f_define_project_trait =

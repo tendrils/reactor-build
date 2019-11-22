@@ -1,7 +1,7 @@
 ifndef _MODULE_REACTOR_MODULE
 _MODULE_REACTOR_MODULE = 1
 
-mod_deps_reactor_module=c_binary
+mod_deps_reactor_module=reactor
 
 #rebuild_project_descriptor_fields+=
 rebuild_defined_project_traits+=reactor:module

@@ -3,10 +3,29 @@
 ifndef REACTOR_BASE_TASKS
 REACTOR_BASE_TASKS = 1
 
+# build step implementations
+
+.build-impl: $(rebuild_output_dirs) $(rebuild_build_items)
+
+.clean-impl: ;\
+    $(call f_action_clean, $(rebuild_dir_build))
+
+.clobber-impl: clean
+
+.all-impl: clean build test
+
+.build-tests-impl: $(rebuild_build_items)
+
+.test-impl: build-tests
+
+.help-impl:
+
+$(rebuild_output_dirs): ; $(call f_mkdir,$^)
+
 # build
 build: .build-post
 
-.build-pre: .init
+.build-pre:
 
 .build-impl: .build-pre
 
@@ -15,7 +34,7 @@ build: .build-post
 # clean
 clean: .clean-post
 
-.clean-pre: .init
+.clean-pre:
 
 .clean-impl: .clean-pre
 
@@ -40,9 +59,9 @@ all: .all-post
 .all-post: .all-impl
 
 # build tests
-build-tests: $(PRODUCT) .build-tests-post
+build-tests: $(rebuild_products) .build-tests-post
 
-.build-tests-pre: .init
+.build-tests-pre:
 
 .build-tests-impl: .build-tests-pre
 
@@ -66,6 +85,6 @@ help: .help-post
 
 .help-post: .help-impl
 
-.PHONY: all build test clean clobber help .init
+.PHONY: all build test clean clobber help
 
 endif

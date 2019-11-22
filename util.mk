@@ -7,46 +7,58 @@ c_util_log_level_info = 2
 c_util_log_level_debug = 3
 c_util_log_level_trace = 4
 
+rebuild_log_level = $(c_util_log_level_info)
+
 ## init function
 define f_util_init =
     $(call f_util_log_channel_init)
 endef
 
 define f_util_log_channel_init =
-    $(call f_util_log_level_define,trace)
-    $(call f_util_log_level_define,debug)
-    $(call f_util_log_level_define,info)
-    $(call f_util_log_level_define,warn)
-    $(call f_util_log_level_define,error)
-    $(call f_util_log_trace,boot,primary logging channel initialized)
+    $(call f_util_log_level_define,trace,4)
+    $(call f_util_log_level_define,debug,3)
+    $(call f_util_log_level_define,info,2)
+    $(call f_util_log_level_define,warn,1)
+    $(call f_util_log_level_define,error,0)
+    $(call f_util_log_trace,primary logging channel initialized)
 endef
 
-f_util_fatal_error = $(error [error] ($1) Fatal error: $2)
-f_util_log = $(if $(call f_util_log_level_is_active,$1),$(call f_util_do_log,$1,$2,$3))
-f_util_do_log = $(info [$1] ($2): $3)
+# define logging interface
+#
+# f_util_log([$1]: level, [$2]: message)
+f_util_log = $(if $(call f_util_log_level_is_active,$1),$(call f_util_do_log,$1,$2))
+f_util_do_log = $(info [$1]$(if $(_context), ($(_context)$(if $(_context_value),:$(_context_value)))): $2)
+f_util_log_trace_internal = $(call f_util_do_log_for_context,trace,core:util)
+f_util_fatal_error = $(error [error] ($(_context):$(_context_value)) Fatal error: $2)
 
 f_util_log_level_is_active = $(v_util_log_level_enabled_$1)
-f_util_log_level_define = $(eval $(call m_util_log_level_define,$1))
+define f_util_log_level_define =
+    $(eval $(call m_util_log_level_define,$1,$2))
+endef
 
 # define utility macros
 define m_util_log_level_define =
-    define f_util_log_$1
-        $$(call f_util_log,$1,$$1,$$2)
-    endef
-    v_util_log_level_enabled_$1 := $$(shell $$(rebuild_home)/shell/lte $$(c_util_log_level_$1) $$(c_util_log_level_$(LOG_LEVEL)))
+    v_core_log_level_value_$1 = $2
+    f_util_log_$1 = $$(call f_util_log,$1,$$1)
+    
+    v_util_log_level_enabled_$1 := $$(shell $$(rebuild_dir_home)/shell/lte $$(v_core_log_level_value_$1) $$(c_util_log_level_$(rebuild_log_level)))
 endef
 m_util_load_file = include $1
 m_util_set_symbol = $1=$2
 m_util_unset_symbol = undefine $1
 m_util_append_to_symbol = $1+=$2
 
-f_util_build_module_dir = $(SCRIPT_MODULE_DIR)/$1
-f_util_load_file = $(call f_util_log_trace,util,f_util_load_file: $1)$(eval $(call m_util_load_file,$1))
-f_util_set_symbol = $(call f_util_log_trace,util,f_util_set_symbol: [$1 = $2])$(eval $(call m_util_set_symbol,$1,$2))
+f_util_load_file = $(call f_util_log_trace,f_util_load_file: $1)$(eval $(call m_util_load_file,$1))
+f_util_set_symbol = $(call f_util_log_trace,f_util_set_symbol: [$1 = $2])$(eval $(call m_util_set_symbol,$1,$2))
 f_util_unset_symbol = $(eval $(call m_util_unset_symbol,$1))
+define f_util_reset_symbol =
+    $(call f_util_unset_symbol,$1)
+    $(call f_util_set_symbol,$1,$2)
+endef
+
 f_util_append_to_symbol = $(eval $(call m_util_append_to_symbol,$1,$2))
 f_util_append_if_absent = $(if $(call f_util_list_contains_string,$2,$($1)),$(call f_util_log_trace,boot,found $1 in $2),$(call f_util_append_to_symbol,$1,$2))
-f_util_export_symbol = $(eval export $1)$(call f_util_log_trace,util,export $1)
+f_util_export_symbol = $(eval export $1)$(call f_util_log_trace,export $1)
 f_util_export_set_symbol = $(eval export $(call m_util_set_symbol,$1,$2))
 f_util_export_unset_symbol = $(eval export $(call m_util_unset_symbol,$1,$2))
 f_util_export_append_to_symbol = $(eval export $(call m_util_append_to_symbol,$1,$2))
