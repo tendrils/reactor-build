@@ -60,6 +60,7 @@ define f_core_rebuild_activate_module =
             $(call f_init_rebuild_activate_module,$(mod))))
     $(call f_core_module_context_set,$1)
     $(call f_$1_init)
+    $(call f_core_context_reset)
     $(call f_util_override_append_if_absent,rebuild_modules_loaded,$(mod))
     $(call f_util_log_debug,loaded module: $1)
 endef
