@@ -28,7 +28,6 @@ endef
 # f_util_log([$1]: level, [$2]: message)
 f_util_log = $(if $(call f_util_log_level_is_active,$1),$(call f_util_do_log,$1,$2))
 f_util_do_log = $(info [$1]$(if $(_context), ($(_context)$(if $(_context_value),:$(_context_value)))): $2)
-f_util_log_trace_internal = $(call f_util_do_log_for_context,trace,core:util)
 f_util_fatal_error = $(error [error] ($(_context):$(_context_value)) Fatal error: $2)
 
 f_util_log_level_is_active = $(v_util_log_level_enabled_$1)
@@ -49,11 +48,26 @@ m_util_unset_symbol = undefine $1
 m_util_append_to_symbol = $1+=$2
 
 f_util_load_file = $(call f_util_log_trace,f_util_load_file: $1)$(eval $(call m_util_load_file,$1))
-f_util_set_symbol = $(call f_util_log_trace,f_util_set_symbol: [$1 = $2])$(eval $(call m_util_set_symbol,$1,$2))
-f_util_unset_symbol = $(eval $(call m_util_unset_symbol,$1))
+
+define f_util_set_symbol =
+    $(call f_util_log_trace,f_util_set_symbol: [$1 = $2])
+    $(call f_util_set_symbol_internal,$1,$2)
+endef
+f_util_set_symbol_internal = $(eval $(call m_util_set_symbol,$1,$2))
+
+define f_util_unset_symbol =
+    $(call f_util_log_trace,f_util_unset_symbol: [$1])
+    $(call f_util_unset_symbol_internal,$1)
+endef
+f_util_unset_symbol_internal = $(eval $(call m_util_unset_symbol,$1))
+
 define f_util_reset_symbol =
-    $(call f_util_unset_symbol,$1)
-    $(call f_util_set_symbol,$1,$2)
+    $(call f_util_log_trace,f_util_reset_symbol: [$1 = $2])
+    $(call f_util_reset_symbol_internal,$1,$2)
+endef
+define f_util_reset_symbol_internal =
+    $(call f_util_unset_symbol_internal,$1)
+    $(call f_util_set_symbol_internal,$1,$2)
 endef
 
 f_util_append_to_symbol = $(eval $(call m_util_append_to_symbol,$1,$2))
@@ -70,3 +84,6 @@ f_util_override_append_if_absent = $(if $(call f_util_list_contains_string,$2,$(
 
 f_util_string_equals = $(strip $(if $(findstring $(strip $1),$2),$(findstring $(strip $2),$1),))
 f_util_list_contains_string = $(strip $(if $(findstring $1,$2),$(foreach x,$2,$(call f_util_string_equals,$1,$(x))),))
+f_util_list_reverse = $(if $(wordlist 2,2,$(1)),$(call f_util_list_reverse,$(wordlist 2,$(words $(1)),$(1))) $(firstword $(1)),$(1))
+f_util_list_head = $(firstword $1)
+f_util_list_tail = $(wordlist 2,$(words $1),$1)

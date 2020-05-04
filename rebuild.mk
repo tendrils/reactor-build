@@ -34,7 +34,7 @@ include $(rebuild_dir_conf_base)/build-host.default.conf
 include $(rebuild_dir_home)/util.mk
 include $(rebuild_dir_home)/tasks.mk
 include $(rebuild_dir_home)/project.mk
-include $(rebuild_dir_home)/module.mk
+include $(rebuild_dir_home)/module_loader.mk
 include $(rebuild_dir_home)/context.mk
 
 define f_core_load_target_config =
@@ -66,21 +66,19 @@ f_core_target_context_set = $(call f_core_context_set,target,$1)
 define f_core_register_system_load_hook =
     $(call f_util_log_trace,f_core_register_system_load_hook: $1)
     $(call f_util_append_to_symbol,rebuild_system_load_hooks,$1)
-    $(call f_util_set_symbol,rebuild_load_hook_context_key__$1,$(_context))
-    $(call f_util_set_symbol,rebuild_load_hook_context_value__$1,$(_context_value))
+    $(call f_util_set_symbol,rebuild_hook_context_key__$1,$(_context))
+    $(call f_util_set_symbol,rebuild_hook_context_value__$1,$(_context_value))
 endef
 
-f_core_load_hook_context_key = $(rebuild_load_hook_context_key__$1)
-f_core_load_hook_context_value = $(rebuild_load_hook_context_value__$1)
+f_core_hook_context_key = $(rebuild_hook_context_key__$1)
+f_core_hook_context_value = $(rebuild_hook_context_value__$1)
 
 define f_core_execute_system_load_hooks =
     $(call f_util_log_trace,f_core_execute_system_load_hooks)
     $(if $(rebuild_system_load_hooks),\
         $(foreach hook,$(rebuild_system_load_hooks),\
             $(call f_util_log_trace,calling system-load hook: $(hook))\
-            $(call f_core_context_set,\
-                $(call f_core_load_hook_context_key,$(hook))\
-                $(call f_core_load_hook_context_value,$(hook)))\
+            $(call f_core_context_set,$(call f_core_hook_context_key,$(hook)),$(call f_core_hook_context_value,$(hook)))\
             $(call $(hook))\
             $(call f_core_context_reset)))
 endef

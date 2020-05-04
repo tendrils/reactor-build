@@ -1,4 +1,4 @@
-# rebuild/module.mk
+# rebuild/module_loader.mk
 
 # loader context variable $(_module) is set dynamically by the module loader
 _module_dir = $(rebuild_dir_module)/$(_module)
@@ -57,10 +57,11 @@ define f_core_rebuild_activate_module =
     $(call f_util_log_trace,f_core_rebuild_activate_module: [$1])
     $(foreach mod,$(mod_deps_$1),\
         $(if $(call f_util_list_contains_string,$(mod),$(rebuild_modules_active)),,\
-            $(call f_init_rebuild_activate_module,$(mod))))
+            $(call f_util_log_trace,loading dependency: [$(mod)])\
+            $(call f_core_rebuild_activate_module,$(mod))))
     $(call f_core_module_context_set,$1)
     $(call f_$1_init)
     $(call f_core_context_reset)
-    $(call f_util_override_append_if_absent,rebuild_modules_loaded,$(mod))
+    $(call f_util_override_append_if_absent,rebuild_modules_active,$(mod))
     $(call f_util_log_debug,loaded module: $1)
 endef
