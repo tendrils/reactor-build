@@ -15,12 +15,12 @@ define f_util_init =
 endef
 
 define f_util_log_channel_init =
-    $(call f_util_log_level_define,trace,4)
-    $(call f_util_log_level_define,debug,3)
-    $(call f_util_log_level_define,info,2)
-    $(call f_util_log_level_define,warn,1)
-    $(call f_util_log_level_define,error,0)
-    $(call f_util_log_trace,primary logging channel initialized)
+    $(call f_util_log_level_define,trace,$(c_util_log_level_trace))
+    $(call f_util_log_level_define,debug,$(c_util_log_level_debug))
+    $(call f_util_log_level_define,info,$(c_util_log_level_info))
+    $(call f_util_log_level_define,warn,$(c_util_log_level_warn))
+    $(call f_util_log_level_define,error,$(c_util_log_level_error))
+    $(call f_util_log_debug,primary logging channel initialized)
 endef
 
 # define logging interface
