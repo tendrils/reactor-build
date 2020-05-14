@@ -16,13 +16,14 @@ define f_base_init =
     # define abstract project model
     $(call f_base_init_model)
 
-    $(call f_define_project_attr_field,rebuild:resource,vector,typed)
-    $(call f_define_project_attr_field,rebuild:reference,vector,typed)
+    $(call f_project_attr_field_define,rebuild:resource,array,$(rb_true))
+    $(call f_project_ref_field_define,rebuild:dependency,array,$(rb_true))
+    $(call f_project_ref_field_define,rebuild:subproject,array,$(rb_true))
 
     # define project reference types
-    $(call f_define_project_reftype,rebuild:dependency,inherit,\
+    $(call f_project_reference_field_define,rebuild:dependency,inherit,\
         f_base_handle_reftype_rebuild_dependency)
-    $(call f_define_project_reftype,rebuild:subproject,inherit,\
+    $(call f_project_ref_type_define,rebuild:subproject,inherit,\
         f_base_handle_reftype_rebuild_subproject)
 
     # define project traits

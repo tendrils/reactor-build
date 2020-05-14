@@ -83,6 +83,7 @@ f_util_override_append_to_symbol = $(eval override $(call m_util_append_to_symbo
 f_util_override_append_if_absent = $(if $(call f_util_list_contains_string,$2,$($1)),,$(call f_util_override_append_to_symbol,$1,$2))
 
 f_util_string_equals = $(strip $(if $(findstring $(strip $1),$2),$(findstring $(strip $2),$1),))
+# ($1): string, ($2): list
 f_util_list_contains_string = $(strip $(if $(findstring $1,$2),$(foreach x,$2,$(call f_util_string_equals,$1,$(x))),))
 f_util_list_reverse = $(if $(wordlist 2,2,$(1)),$(call f_util_list_reverse,$(wordlist 2,$(words $(1)),$(1))) $(firstword $(1)),$(1))
 f_util_list_head = $(firstword $1)

@@ -6,6 +6,9 @@ auto: default
 # Set default configuration and resolve project paths
 CONF_DEFAULT_DEFAULT := reference-platform
 
+rb_true = TRUE
+rb_false =
+
 # [rebuild_dir_main] is the directory from which the make command originated
 # [rebuild_dir_root] is the root node of the project hierarchy, where the
 #   active copy of ReBuild is installed. it must be set to the same value by
