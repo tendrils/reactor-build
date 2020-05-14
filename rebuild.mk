@@ -68,20 +68,16 @@ f_core_target_context_set = $(call f_core_context_set,target,$1)
 
 define f_core_register_system_load_hook =
     $(call f_util_log_trace,f_core_register_system_load_hook: $1)
+    $(call f_core_context_save,rebuild_loadhook__$1)
     $(call f_util_append_to_symbol,rebuild_system_load_hooks,$1)
-    $(call f_util_set_symbol,rebuild_hook_context_key__$1,$(_context))
-    $(call f_util_set_symbol,rebuild_hook_context_value__$1,$(_context_value))
 endef
-
-f_core_hook_context_key = $(rebuild_hook_context_key__$1)
-f_core_hook_context_value = $(rebuild_hook_context_value__$1)
 
 define f_core_execute_system_load_hooks =
     $(call f_util_log_trace,f_core_execute_system_load_hooks)
     $(if $(rebuild_system_load_hooks),\
         $(foreach hook,$(rebuild_system_load_hooks),\
             $(call f_util_log_trace,calling system-load hook: $(hook))\
-            $(call f_core_context_set,$(call f_core_hook_context_key,$(hook)),$(call f_core_hook_context_value,$(hook)))\
+            $(call f_core_context_restore,rebuild_loadhook__$(hook))\
             $(call $(hook))\
             $(call f_core_context_reset)))
 endef
