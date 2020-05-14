@@ -27,12 +27,13 @@ define f_c_binary_init =
 endef
 
 define f_c_binary_toolchain_define =
+	$(call f_util_log_debug,$0: name=[$1], type=[$2], arch=[$3], os=[$4], abi=[$5])
+	$(call f_core_context_save,c_binary_tc_$1)
 	$(call f_util_override_append_if_absent,v_c_binary_toolchains,$1)
 	$(call f_util_set_symbol,v_c_binary_tc_type_$1,$2)
 	$(call f_util_set_symbol,v_c_binary_tc_arch_$1,$3)
 	$(call f_util_set_symbol,v_c_binary_tc_os_$1,$4)
 	$(call f_util_set_symbol,v_c_binary_tc_abi_$1,$5)
-	$(call f_util_log_debug,c_binary,c/c++ toolchain provider registered: $1)
 	$(if $(v_c_binary_toolchain_default),,$(call f_c_binary_tc_default_set,$1))
 endef
 
@@ -41,8 +42,8 @@ define f_c_binary_project_type_define =
 endef
 
 define f_c_binary_tc_default_set =
+	$(call f_util_log_trace,$0: [$1])
 	$(call f_util_override_set_symbol,v_c_binary_toolchain_default,$1)
-	$(call f_util_log_debug,c_binary,default c/c++ toolchain provider set to [$1])
 endef
 
 # f_c_binary_cmd_invoke(command, in_files, out_file)
@@ -56,18 +57,15 @@ endef
 #
 define f_c_binary_cmd_invoke =
 	$(if $(v_c_binary_toolchain_default),,\
-		$(call f_util_fatal_error,c-binary,no default c/c++ toolchain provider set))
+		$(call f_util_fatal_error,no c/c++ toolchain providers are registered))
 	$(if $(v_c_binary_toolchain_active),\
 		$(call f_c_binary_tc_cmd_invoke,$(v_c_binary_toolchain_active),$1,$2,$3),\
     	$(call f_c_binary_tc_cmd_invoke,$(v_c_binary_toolchain_default),$1,$2,$3))
 endef
 
 define f_c_binary_tc_active_set =
-	$(if $1,\
-		$(call f_util_log_debug,c_binary,activated c/c++ toolchain [$(v_c_binary_toolchain_active)])\
-		$(call f_util_set_symbol,v_c_binary_toolchain_active,$1),\
-		$(call f_util_log_debug,c_binary,deactivated c/c++ toolchain [$(v_c_binary_toolchain_active)])\
-		$(call f_util_unset_symbol,v_c_binary_toolchain_active,$1))
+	$(call f_util_log_debug,activated c/c++ toolchain [$(v_c_binary_toolchain_active)])\
+	$(call f_util_set_symbol,v_c_binary_toolchain_active,$1)
 endef
 
 define f_c_binary_tc_active_get =
@@ -93,8 +91,10 @@ endef
 #
 define f_c_binary_tc_cmd_invoke =
 	$(if $(fp_c_binary_tc_$1_cmd_$2),,\
-		$(call f_util_fatal_error,c-binary,no [$2] command set for c/c++ toolchain provider [$(C_BINARY_TOOLCHAIN_DEFAULT)]))
+		$(call f_util_fatal_error,no [$2] command set for c/c++ toolchain provider [$(C_BINARY_TOOLCHAIN_DEFAULT)]))
+	$(call f_util_context_restore,c_binary_tc_$1)
 	$(call $(fp_c_binary_tc_$1_cmd_$2),$3,$4)
+	$(call f_util_context_reset)
 endef
 
 # generic command dispatch functions
