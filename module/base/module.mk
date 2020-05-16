@@ -126,7 +126,7 @@ endef
 define f_define_project_trait =
     $(call f_util_log_debug,f_define_project_trait: id=[$1], handler=[$2])
     $(call f_util_append_to_symbol,rebuild_defined_project_traits,$1)
-    $(call f_util_set_symbol,rebuild_project_trait_handler_$(subst :,_,$1),$2)
+    $(call f_util_set_symbol,rebuild_project_trait_handler__$(subst :,_,$1),$2)
 endef
 
 define f_project_trait_enable =
@@ -137,7 +137,7 @@ endef
 define f_project_trait_enable_for_project =
     $(call f_util_log_trace,f_project_trait_enable: project=[$1] trait=[$2])
     $(call f_util_append_if_absent,rebuild_project_var__$1__project_traits,$2)
-    $(call f_util_log_trace,trait [$1] enabled for project [$2])
+    $(call f_util_log_debug,trait [$1] enabled for project [$2])
 endef
 
 define f_project_trait_is_enabled =
@@ -156,7 +156,7 @@ define f_activate_project_traits =
 endef
 
 define f_activate_project_trait =
-    $(call $(rebuild_project_trait_handler_$1))
+    $(call $(rebuild_project_trait_handler__$1))
 endef
 
 endif
