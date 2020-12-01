@@ -18,8 +18,8 @@ define f_c_binary_init =
 
 	$(call f_define_build_action,compile_c_with_tc,f_c_binary_do_compile_c_with_tc)
 	$(call f_define_build_action,compile_cxx_with_tc,f_c_binary_do_compile_cxx_with_tc)
-	$(call f_define_build_action,compile_c_to_deps,f_c_binary_do_compile_c_to_deps_with_tc)
-	$(call f_define_build_action,compile_cxx_to_deps,f_c_binary_do_compile_cxx_to_deps_with_tc)
+	$(call f_define_build_action,compile_c_to_deps_with_tc,f_c_binary_do_compile_c_to_deps_with_tc)
+	$(call f_define_build_action,compile_cxx_to_deps_with_tc,f_c_binary_do_compile_cxx_to_deps_with_tc)
 	$(call f_define_build_action,compile_c_to_asm_with_tc,f_c_binary_do_compile_c_to_asm_with_tc)
 	$(call f_define_build_action,compile_cxx_to_asm_with_tc,f_c_binary_do_compile_cxx_to_asm_with_tc)
 	$(call f_define_build_action,compile_asm_with_tc,f_c_binary_do_compile_asm_with_tc)
