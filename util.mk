@@ -1,12 +1,19 @@
 # utility and logging functions
 
+## constants
+c_util_log_level_error = 0
+c_util_log_level_warn = 1
+c_util_log_level_info = 2
+c_util_log_level_debug = 3
+c_util_log_level_trace = 4
+
 ## init function
 define f_util_init =
     $(call f_util_log_channel_init)
 endef
 
 ## logging interface
-rebuild_log_level = $(c_util_log_level_info)
+rebuild_log_level = info
 
 define f_util_log_channel_init =
     $(call f_util_log_level_define,trace,$(c_util_log_level_trace))
@@ -28,6 +35,18 @@ f_util_log_level_is_active = $(v_util_log_level_enabled_$1)
 f_util_log = $(if $(call f_util_log_level_is_active,$1),$(call f_util_do_log,$1,$2))
 f_util_do_log = $(info [$1] $(if $(_context),($(_context)):) $2)
 f_util_fatal_error = $(error [error] $(if $(_context),($(_context)):) Fatal error: $2)
+# define utility macros
+define m_util_log_level_define =
+    v_core_log_level_value_$1 = $2
+    f_util_log_$1 = $$(call f_util_log,$1,$$1)
+
+    v_util_log_level_enabled_$1 := $$(call lte,$2,$$(v_core_log_level_value_$$(rebuild_log_level)))
+
+endef
+m_util_load_file = include $1
+m_util_set_symbol = $1=$2
+m_util_unset_symbol = undefine $1
+m_util_append_to_symbol = $1+=$2
 
 ## symbol manipulation functions
 f_util_load_file = $(call f_util_log_trace,f_util_load_file: $1)$(eval $(call m_util_load_file,$1))
@@ -72,22 +91,3 @@ f_util_list_contains_string = $(strip $(if $(findstring $1,$2),$(foreach x,$2,$(
 f_util_list_reverse = $(if $(wordlist 2,2,$(1)),$(call f_util_list_reverse,$(wordlist 2,$(words $(1)),$(1))) $(firstword $(1)),$(1))
 f_util_list_head = $(firstword $1)
 f_util_list_tail = $(wordlist 2,$(words $1),$1)
-
-## utility macros
-define m_util_log_level_define =
-    v_core_log_level_value_$1 = $2
-    f_util_log_$1 = $$(call f_util_log,$1,$$1)
-    
-    v_util_log_level_enabled_$1 := $$(shell $$(rebuild_dir_home)/shell/lte $$(v_core_log_level_value_$1) $$(c_util_log_level_$(rebuild_log_level)))
-endef
-m_util_load_file = include $1
-m_util_set_symbol = $1=$2
-m_util_unset_symbol = undefine $1
-m_util_append_to_symbol = $1+=$2
-
-## constants
-c_util_log_level_error = 0
-c_util_log_level_warn = 1
-c_util_log_level_info = 2
-c_util_log_level_debug = 3
-c_util_log_level_trace = 4

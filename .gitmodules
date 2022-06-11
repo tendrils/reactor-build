@@ -1,0 +1,3 @@
+[submodule "gmsl"]
+	path = gmsl
+	url = https://github.com/brulzki/gmsl.git
