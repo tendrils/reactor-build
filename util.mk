@@ -7,7 +7,7 @@ c_util_log_level_info = 2
 c_util_log_level_debug = 3
 c_util_log_level_trace = 4
 
-rebuild_log_level = $(c_util_log_level_info)
+#rebuild_log_level = $(c_util_log_level_info)
 
 ## init function
 define f_util_init =
@@ -39,8 +39,9 @@ endef
 define m_util_log_level_define =
     v_core_log_level_value_$1 = $2
     f_util_log_$1 = $$(call f_util_log,$1,$$1)
-    
-    v_util_log_level_enabled_$1 := $$(shell $$(rebuild_dir_home)/shell/lte $$(v_core_log_level_value_$1) $$(c_util_log_level_$(rebuild_log_level)))
+
+    v_util_log_level_enabled_$1 := $$(call lte,$2,$$(v_core_log_level_value_$$(rebuild_log_level)))
+
 endef
 m_util_load_file = include $1
 m_util_set_symbol = $1=$2

@@ -21,7 +21,7 @@ SUBPRODUCTS+=$(PRODUCT_MODULE_FILES)
 
 ## module load function
 define f_reactor_module_init =
-
+	$(call f_util_log_debug,reactor_module_project_name=$(reactor_module_project_name))
 endef
 
 define f_reactor_module_project_name_get =

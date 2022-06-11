@@ -27,6 +27,9 @@ rebuild_file_conf = $(rebuild_dir_conf)/$(rebuild_filename_conf)
 # shorthand aliases for symbols often used in expressions
 rbproj_root = $(rebuild_dir_root)
 
+# Load external library GMSL, which we use for integer representation and arithmetic functions
+include $(rebuild_dir_home)/gmsl/gmsl
+
 # Load host and target configuration files
 -include $(rebuild_dir_conf_base)/build-host.conf
 include $(rebuild_dir_conf_base)/build-host.default.conf
