@@ -60,8 +60,10 @@ define f_core_rebuild_activate_module =
             $(call f_util_log_trace,loading dependency: [$(mod)])\
             $(call f_core_rebuild_activate_module,$(mod))))
     $(call f_core_module_context_set,$1)
+    $(call f_util_reset_symbol,_module,$1)
     $(call f_$1_init)
     $(call f_core_context_reset)
+    $(call f_util_unset_symbol,_module)
     $(call f_util_override_append_if_absent,rebuild_modules_active,$(mod))
     $(call f_util_log_debug,loaded module: $1)
 endef

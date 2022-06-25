@@ -48,23 +48,25 @@ m_util_set_symbol = $1=$2
 m_util_unset_symbol = undefine $1
 m_util_append_to_symbol = $1+=$2
 
+f_util_assert_condition = $(if $1,,$(call f_util_fatal_error,ASSERTION FAILED: $2))
+
 ## symbol manipulation functions
 f_util_load_file = $(call f_util_log_trace,f_util_load_file: $1)$(eval $(call m_util_load_file,$1))
 
 define f_util_set_symbol =
-    $(call f_util_log_trace,f_util_set_symbol: [$1 = $2])
+    $(call f_util_log_trace,($0): symbol:[$1] value:[$2])
     $(call f_util_set_symbol_internal,$1,$2)
 endef
 f_util_set_symbol_internal = $(eval $(call m_util_set_symbol,$1,$2))
 
 define f_util_unset_symbol =
-    $(call f_util_log_trace,f_util_unset_symbol: [$1])
+    $(call f_util_log_trace,($0): symbol:[$1])
     $(call f_util_unset_symbol_internal,$1)
 endef
 f_util_unset_symbol_internal = $(eval $(call m_util_unset_symbol,$1))
 
 define f_util_reset_symbol =
-    $(call f_util_log_trace,f_util_reset_symbol: [$1 = $2])
+    $(call f_util_log_trace,($0): symbol:[$1] value:[$2])
     $(call f_util_reset_symbol_internal,$1,$2)
 endef
 define f_util_reset_symbol_internal =
@@ -72,17 +74,10 @@ define f_util_reset_symbol_internal =
     $(call f_util_set_symbol_internal,$1,$2)
 endef
 
-f_util_append_to_symbol = $(eval $(call m_util_append_to_symbol,$1,$2))
-f_util_append_if_absent = $(if $(call f_util_list_contains_string,$2,$($1)),$(call f_util_log_trace,boot,found $1 in $2),$(call f_util_append_to_symbol,$1,$2))
-f_util_export_symbol = $(eval export $1)$(call f_util_log_trace,export $1)
-f_util_export_set_symbol = $(eval export $(call m_util_set_symbol,$1,$2))
-f_util_export_unset_symbol = $(eval export $(call m_util_unset_symbol,$1,$2))
-f_util_export_append_to_symbol = $(eval export $(call m_util_append_to_symbol,$1,$2))
-f_util_export_append_if_absent = $(if $(call f_util_list_contains_string,$2,$($1)),,$(call f_util_export_append_to_symbol,$1,$2))
-f_util_override_set_symbol = $(eval override $(call m_util_set_symbol,$1,$2))
-f_util_override_unset_symbol = $(eval override $(call m_util_unset_symbol,$1))
-f_util_override_append_to_symbol = $(eval override $(call m_util_append_to_symbol,$1,$2))
-f_util_override_append_if_absent = $(if $(call f_util_list_contains_string,$2,$($1)),,$(call f_util_override_append_to_symbol,$1,$2))
+f_util_append_to_symbol = $(call f_util_log_trace,($0): symbol:[$1] value:[$2])$(eval $(call m_util_append_to_symbol,$1,$2))
+f_util_append_if_absent = $(call f_util_log_trace,($0): symbol:[$1] value:[$2])$(if $(call f_util_list_contains_string,$2,$($1)),,$(call f_util_append_to_symbol,$1,$2))
+f_util_remove_from_symbol = $(call f_util_log_trace,($0): symbol:[$1] value:[$2])$(call f_util_set_symbol,$1,$(filter-out $2,$($1)))
+f_util_export_symbol = $(call f_util_log_trace,($0): [$1])$(eval export $1)
 
 ## list and string manipulation functions
 f_util_string_equals = $(strip $(if $(findstring $(strip $1),$2),$(findstring $(strip $2),$1),))
@@ -91,3 +86,18 @@ f_util_list_contains_string = $(strip $(if $(findstring $1,$2),$(foreach x,$2,$(
 f_util_list_reverse = $(if $(wordlist 2,2,$(1)),$(call f_util_list_reverse,$(wordlist 2,$(words $(1)),$(1))) $(firstword $(1)),$(1))
 f_util_list_head = $(firstword $1)
 f_util_list_tail = $(wordlist 2,$(words $1),$1)
+f_util_list_map = $(foreach _item,$1,$(call $2,$(_item)))
+f_util_list_get = $(word $1,$2)
+f_util_list_get_first = $(call f_util_list_head,$1)
+f_util_list_get_last = $(call f_util_list_head,$(call f_util_list_reverse,$1))
+
+#   integer operations
+
+# read symbol value and then increment
+define f_util_int_get_increment =
+
+endef
+# increment symbol and then read value
+define f_util_int_increment_get =
+
+endef

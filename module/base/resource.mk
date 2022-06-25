@@ -13,8 +13,7 @@ define f_rebuild_call_project_resource_type_handler =
 endef
 
 define f_define_project_resource =
-    $(call f_util_log_debug,base,\
-        f_define_project_resource: project=[$1], id=[$2], restype=[$3], path=[$4])
+    $(call f_util_log_debug,base::($0): project=[$1], id=[$2], restype=[$3], path=[$4])
     #$(call f_util_append_to_symbol,rebuild_defined_project_references__$1,$2)
     #$(call f_util_set_symbol,rebuild_project_resource_restype__$1__$2,$3)
     #$(call f_util_set_symbol,rebuild_project_resource__$1__$2,$4)

@@ -1,9 +1,9 @@
 ifndef _MODULE_BASE
 _MODULE_BASE = 1
 
-include $(_module_dir)/reference.mk
-include $(_module_dir)/resource.mk
-include $(_module_dir)/typemap.mk
+#include $(_module_dir)/reference.mk
+#include $(_module_dir)/resource.mk
+#include $(_module_dir)/typemap.mk
 
 rebuild_project_descriptor_fields += \
     project_traits \
@@ -13,6 +13,11 @@ rebuild_subproject_paths = $(call f_base)
 
 ## module load function
 define f_base_init =
+    $(call f_util_load_file,$(_module_dir)/ref.mk)
+    $(call f_util_load_file,$(_module_dir)/object_system.mk)
+    $(call f_util_load_file,$(_module_dir)/reference.mk)
+    $(call f_util_load_file,$(_module_dir)/resource.mk)
+    $(call f_util_load_file,$(_module_dir)/typemap.mk)
     # define abstract project model
     $(call f_base_init_model)
 
