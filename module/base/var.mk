@@ -143,6 +143,10 @@ define f_core_var_get_type =
         $(subst $(c_format_sep),$(_space),
             $(call f_core_var_header,$1)))
 endef
+define f_core_var_get_type_root =
+    $(call f_util_list_head,$(subst <,$(_space),
+        $(call f_core_var_get_type,$1)))
+endef
 define f_core_var_get_header =
     $(call f_util_list_head,
         $(subst $(c_header_sep),$(_space),$1))
@@ -153,6 +157,11 @@ define f_core_var_get =
 endef
 
 #   variable predicates
-define f_core_var_format_p =
-    $(call f_util_log_trace,($0): $(call f_util_var_get))
+define f_core_var_format_is_p =
+    $(call f_util_string_equals,
+        $(call f_core_var_get_format,$1),$2)
+endef
+define f_core_var_type_is_p =
+    $(call f_util_string_equals,
+        $(call f_core_var_get_type,$1),$2)
 endef

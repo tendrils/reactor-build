@@ -17,7 +17,17 @@ _space:= $(empty) $(empty)
 _lparen:= (
 _rparen:= )
 
-## logging interface
+#   utility function shorthands
+_let = $(call f_util_set_symbol,$1,$2)
+_append = $(call f_util_append_to_symbol,$1,$2)
+_clear = $(call f_util_unset_symbol,$1)
+_equals = $(call f_util_string_equals,$1,$2)
+
+#########################
+#   logging interface   #
+#########################
+
+## default log level, to be overridden by command line
 rebuild_log_level = info
 
 define f_util_log_channel_init =
@@ -90,6 +100,7 @@ f_util_drop_first_item = $(call f_util_log_trace,($0): [$1])$(eval $(call m_util
 
 ## list and string manipulation functions
 f_util_string_equals = $(strip $(if $(findstring $(strip $1),$2),$(findstring $(strip $2),$1),))
+f_util_string_remove_whitespace = $(subst $(_space),,$(strip $1))
 # ($1): string, ($2): list
 f_util_list_contains_string = $(strip $(if $(findstring $1,$2),$(foreach x,$2,$(call f_util_string_equals,$1,$(x))),))
 f_util_list_reverse = $(if $(wordlist 2,2,$(1)),$(call f_util_list_reverse,$(wordlist 2,$(words $(1)),$(1))) $(firstword $(1)),$(1))
