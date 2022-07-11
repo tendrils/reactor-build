@@ -21,8 +21,6 @@ f_core_typemap_inherit_single = $(call _equals,\
 f_core_typemap_inherit_multi = $(call _equals,\
     $(call f_core_typemap_inheritance,$1),rbconst_typemap_inherit_multiple)
 
-f_core_typemap_transitive = $(rebuild_typemap_transitive__$1)
-
 define f_core_typemap_supports_inheritance =
     $(call f_core_typemap_inherit_single,$1)
     $(call f_core_typemap_inherit_multi,$1)
@@ -35,7 +33,6 @@ define f_core_typemap_define =
     $(call _trace,($0): [name = $1, inherit = $2, transitive-id = $3])
     $(call _append,rebuild_defined_typemaps,$1)
     $(call _set,rebuild_typemap_inheritance__$1,$2)
-    $(call _set,rebuild_typemap_transitive__$1,$(if $3,$3,$(rbconst_typemap_inherit_none)))
 endef
 
 define f_core_type_define_for_typemap =
