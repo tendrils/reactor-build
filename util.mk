@@ -18,10 +18,20 @@ _lparen:= (
 _rparen:= )
 
 #   utility function shorthands
-_let = $(call f_util_set_symbol,$1,$2)
+_set = $(call f_util_set_symbol,$1,$2)
+_let = $(call f_util_reset_symbol,$1,$2)
 _append = $(call f_util_append_to_symbol,$1,$2)
+_add = $(call f_util_append_if_absent,$1,$2)
 _clear = $(call f_util_unset_symbol,$1)
 _equals = $(call f_util_string_equals,$1,$2)
+_contains = $(call f_util_list_contains_string,$1,$2)
+
+_trace = $(call f_util_log_trace,$1)
+_debug = $(call f_util_log_debug,$1)
+_info = $(call f_util_log_info,$1)
+_warn = $(call f_util_log_warn,$1)
+_error = $(call f_util_log_error,$1)
+_fatal = $(call f_util_fatal_error,$1)
 
 #########################
 #   logging interface   #
@@ -109,7 +119,7 @@ f_util_list_tail = $(wordlist 2,$(words $1),$1)
 f_util_list_map = $(foreach _item,$1,$(call $2,$(_item)))
 f_util_list_get = $(word $1,$2)
 f_util_list_get_first = $(call f_util_list_head,$1)
-f_util_list_get_last = $(call f_util_list_head,$(call f_util_list_reverse,$1))
+f_util_list_get_last = $(word $(words $1),$1)
 
 #   integer operations
 # write incremented value to symbol $1

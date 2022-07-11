@@ -32,9 +32,6 @@ c_type_type = type
 c_object_type = object
 c_array_type = array
 
-c_format_sep := ::
-c_header_sep := <:>
-
 #   lexical scope functions
 define f_core_stack_init =
     $(call f_util_log_trace,($0))
@@ -119,10 +116,31 @@ define f_core_var_unset_for_scope =
 endef
 ##  get operations:
 define f_core_var_get =
-    $(call f_core_var_get_raw,$1)
+    $(call f_core_val_get,$(call f_core_var_get_raw,$1))
+endef
+define f_core_var_type =
+    $(call f_core_val_get_type,$(call f_core_var_get_raw,$1))
+endef
+define f_core_var_get_format =
+    $(call f_core_val_get_format,$(call f_core_var_get_raw,$1))
+endef
+define f_core_var_get_header =
+    $(call f_core_val_get_header,$(call f_core_var_get_raw,$1))
 endef
 define f_core_var_get_raw =
     $(call f_core_var_get_raw_for_scope,$1,$(_scope))
+endef
+define f_core_var_get_for_scope =
+    $(call f_core_val_get,$(call f_core_var_get_raw_for_scope,$1,$2))
+endef
+define f_core_var_type_for_scope =
+    $(call f_core_val_get_type,$(call f_core_var_get_raw_for_scope,$1,$2))
+endef
+define f_core_var_get_format_for_scope =
+    $(call f_core_val_get_format,$(call f_core_var_get_raw_for_scope,$1,$2))
+endef
+define f_core_var_get_header_for_scope =
+    $(call f_core_val_get_header,$(call f_core_var_get_raw_for_scope,$1,$2))
 endef
 define f_core_var_get_raw_for_scope =
     $(call f_util_log_trace,($0): var_id:[$1], scope_id:[$2])
@@ -130,30 +148,6 @@ define f_core_var_get_raw_for_scope =
 endef
 define f_core_var_id =
     rebuild_var__$2__$1
-endef
-
-# variable encoding functions
-define f_core_var_get_format =
-    $(call f_util_list_head,
-        $(subst $(c_format_sep),$(_space),
-            $(call f_core_var_header,$1)))
-endef
-define f_core_var_get_type =
-    $(call f_util_list_tail,
-        $(subst $(c_format_sep),$(_space),
-            $(call f_core_var_header,$1)))
-endef
-define f_core_var_get_type_root =
-    $(call f_util_list_head,$(subst <,$(_space),
-        $(call f_core_var_get_type,$1)))
-endef
-define f_core_var_get_header =
-    $(call f_util_list_head,
-        $(subst $(c_header_sep),$(_space),$1))
-endef
-define f_core_var_get =
-    $(call f_util_list_tail,
-        $(subst $(c_header_sep),$(_space),$1))
 endef
 
 #   variable predicates

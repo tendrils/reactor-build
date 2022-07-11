@@ -18,6 +18,10 @@ define f_base_init =
     $(call f_util_load_file,$(_module_dir)/reference.mk)
     $(call f_util_load_file,$(_module_dir)/resource.mk)
     $(call f_util_load_file,$(_module_dir)/typemap.mk)
+
+    # define data types
+    $(call f_typemap_map_define,)
+
     # define abstract project model
     $(call f_base_init_model)
 
