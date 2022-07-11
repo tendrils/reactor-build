@@ -34,31 +34,33 @@ c_array_type = array
 
 #   lexical scope functions
 define f_core_stack_init =
-    $(call f_util_log_trace,($0))
-    $(call f_util_set_symbol,rebuild_scope_id_next,0)
+    $(call _trace,($0))
+    $(call _set,rebuild_scope_id_next,0)
     $(call f_core_scope_push)
 endef
 define f_core_scope_save =
-    $(call f_util_log_trace,($0): name:[$1])
-    $(call f_util_set_symbol,rebuild_scope_vars__$1,rebuild_scope_vars__$(_scope))
+    $(call _trace,($0): name:[$1])
+    $(call _set,rebuild_scope_vars__$1,rebuild_scope_vars__$(_scope))
     $(foreach var,$(rebuild_scope_vars__$(_scope)),
-        $(call f_util_set_symbol,rebuild_var__$1__$(var),$($(var))))
+        $(call _set,rebuild_var__$1__$(var),$($(var))))
 endef
 #   allocate a new scope frame and push it onto the stack
 define f_core_scope_push =
-    $(call f_util_log_trace,($0))
+    $(call _trace,($0))
     $(call f_core_scope_push_frame,$(call f_util_int_get_increment,rebuild_scope_id_next))
 endef
 #   push scope frame ($1) onto the stack
 define f_core_scope_push_frame =
-    $(call f_util_log_trace,($0): frame:[$1])
-    $(call f_util_prepend_to_symbol,rebuild_scopes,$1)
-    $(call f_util_set_symbol,_scope,$(call f_util_list_head,$(rebuild_scopes)))
+    $(call _trace,($0): frame:[$1])
+    $(call _append,rebuild_scope_stack,$1)
+    $(call _set,_scope,$(call _head,$(rebuild_scope_stack)))
 endef
 define f_core_scope_pop =
     $(call _trace,($0): _scope:[$(_scope)])
-    $(call f_util_drop_first_item,rebuild_scopes)
-    $(call _set,_scope,$(call f_util_list_head,$(rebuild_scopes)))
+    $(if $(call lt,$(words $(rebuild_scope_stack)),0),
+        $(call _fatal,rebuild scope stack underflow),)
+    $(call _shift,rebuild_scope_stack)
+    $(call _set,_scope,$(call f_util_list_head,$(rebuild_scope_stack)))
     $(call f_util_int_decrement,rebuild_scope_id_next)
 endef
 #   variable operations

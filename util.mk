@@ -20,8 +20,9 @@ _rparen:= )
 #   utility function shorthands
 _set = $(call f_util_set_symbol,$1,$2)
 _let = $(call f_util_reset_symbol,$1,$2)
-_append = $(call f_util_append_to_symbol,$1,$2)
 _add = $(call f_util_append_if_absent,$1,$2)
+_append = $(call f_util_append_to_symbol,$1,$2)
+_prepend = $(call f_util_prepend_to_symbol,$1,$2)
 _clear = $(call f_util_unset_symbol,$1)
 _shift = $(call f_util_shift_symbol,$1)
 

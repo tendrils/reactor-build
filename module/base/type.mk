@@ -30,7 +30,7 @@ endef
 f_core_type_typemap_get = $(rebuild_type_parent_typemap__$1)
 
 define f_core_typemap_define =
-    $(call _trace,($0): [name = $1, inherit = $2, transitive-id = $3])
+    $(call _trace,($0): [name = $1, inherit = $2])
     $(call _append,rebuild_defined_typemaps,$1)
     $(call _set,rebuild_typemap_inheritance__$1,$2)
 endef
@@ -66,35 +66,12 @@ define f_core_type_ancestors_recursive =
             $(__parent)$(call f_core_type_ancestors,$(__parent),$(__seen))
         )
     )
+    $(call _clear,__seen)
 endef
 
-# function: f_core_type_has_parent
-#   - recursively checks whether type-B is a member of type-A's inheritance tree
-# ($1): type-A
-# ($2): type-B
-define f_core_type_has_parent =
+# function: f_core_type_inherits_from
+#   - recursively checks whether type ($2) is a member
+# of type ($1)'s inheritance tree
+define f_core_type_inherits_from =
     $(call _contains,$2,$(call f_core_type_ancestors,$1))
-endef
-
-# function: f_core_type_is_member_of
-# ($1): type-A, ($2): type-B
-#   - returns whether type-B is a member of type-A, directly or transitively
-#   - takes the union of a series of assertions; if all fail, evaluates to nil
-# assertion-1: [type-A] is equal to [type-B]
-# assertion-2: [type-A] and [type-B] are members of the same typemap,
-#               AND typemap supports inheritance,
-#               AND [type-B] is included in [type-A]'s ancestor types
-define f_core_type_is_member_of =
-    $(call f_util_string_equals,$1,$2)
-
-    $(call _let,__typemap_a,$(call f_core_type_typemap_get,$1))
-    $(call _let,__typemap_b,$(call f_core_type_typemap_get,$2))
-    $(if $(call _equals,$(__typemap_a),$(__typemap_b)),\
-        $(if $(call f_core_typemap_supports_inheritance,$(__typemap_a)),\
-            $(call f_core_type_has_parent,$1,$2)
-        ,)
-    ,)
-
-    $(call _clear,__typemap_a)
-    $(call _clear,__typemap_b)
 endef
