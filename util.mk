@@ -23,8 +23,13 @@ _let = $(call f_util_reset_symbol,$1,$2)
 _append = $(call f_util_append_to_symbol,$1,$2)
 _add = $(call f_util_append_if_absent,$1,$2)
 _clear = $(call f_util_unset_symbol,$1)
+_shift = $(call f_util_shift_symbol,$1)
+
 _equals = $(call f_util_string_equals,$1,$2)
 _contains = $(call f_util_list_contains_string,$1,$2)
+
+_head = $(call f_util_list_head,$1)
+_tail = $(call f_util_list_tail,$1)
 
 _trace = $(call f_util_log_trace,$1)
 _debug = $(call f_util_log_debug,$1)
@@ -46,7 +51,7 @@ define f_util_log_channel_init =
     $(call f_util_log_level_define,info,$(c_util_log_level_info))
     $(call f_util_log_level_define,warn,$(c_util_log_level_warn))
     $(call f_util_log_level_define,error,$(c_util_log_level_error))
-    $(call f_util_log_debug,primary logging channel initialized)
+    $(call _debug,primary logging channel initialized)
 endef
 
 # ($1): level-name, ($2): level-number
@@ -75,25 +80,25 @@ m_util_append_to_symbol = $1+=$2
 m_util_prepend_to_symbol = $1=$2 $1
 m_util_drop_first_item = $1=$(call f_util_list_tail,$1)
 
-f_util_assert_condition = $(if $1,,$(call f_util_fatal_error,ASSERTION FAILED: $2))
+f_util_assert_condition = $(if $1,,$(call _fatal,ASSERTION FAILED: $2))
 
 ## symbol manipulation functions
-f_util_load_file = $(call f_util_log_trace,f_util_load_file: $1)$(eval $(call m_util_load_file,$1))
+f_util_load_file = $(call _trace,f_util_load_file: $1)$(eval $(call m_util_load_file,$1))
 
 define f_util_set_symbol =
-    $(call f_util_log_trace,($0): symbol:[$1] value:[$2])
+    $(call _trace,($0): symbol:[$1] value:[$2])
     $(call f_util_set_symbol_internal,$1,$2)
 endef
 f_util_set_symbol_internal = $(eval $(call m_util_set_symbol,$1,$2))
 
 define f_util_unset_symbol =
-    $(call f_util_log_trace,($0): symbol:[$1])
+    $(call _trace,($0): symbol:[$1])
     $(call f_util_unset_symbol_internal,$1)
 endef
 f_util_unset_symbol_internal = $(eval $(call m_util_unset_symbol,$1))
 
 define f_util_reset_symbol =
-    $(call f_util_log_trace,($0): symbol:[$1] value:[$2])
+    $(call _trace,($0): symbol:[$1] value:[$2])
     $(call f_util_reset_symbol_internal,$1,$2)
 endef
 define f_util_reset_symbol_internal =
@@ -101,12 +106,12 @@ define f_util_reset_symbol_internal =
     $(call f_util_set_symbol_internal,$1,$2)
 endef
 
-f_util_append_to_symbol = $(call f_util_log_trace,($0): symbol:[$1] value:[$2])$(eval $(call m_util_append_to_symbol,$1,$2))
-f_util_append_if_absent = $(call f_util_log_trace,($0): symbol:[$1] value:[$2])$(if $(call f_util_list_contains_string,$2,$($1)),,$(call f_util_append_to_symbol,$1,$2))
-f_util_prepend_to_symbol = $(call f_util_log_trace,($0): symbol:[$1] value:[$2])$(eval $(call m_util_prepend_to_symbol,$1,$2))
-f_util_remove_from_symbol = $(call f_util_log_trace,($0): symbol:[$1] value:[$2])$(call f_util_set_symbol,$1,$(filter-out $2,$($1)))
-f_util_export_symbol = $(call f_util_log_trace,($0): [$1])$(eval export $1)
-f_util_drop_first_item = $(call f_util_log_trace,($0): [$1])$(eval $(call m_util_drop_first_item,$1))
+f_util_append_to_symbol = $(call _trace,($0): symbol:[$1] value:[$2])$(eval $(call m_util_append_to_symbol,$1,$2))
+f_util_append_if_absent = $(call _trace,($0): symbol:[$1] value:[$2])$(if $(call f_util_list_contains_string,$2,$($1)),,$(call f_util_append_to_symbol,$1,$2))
+f_util_prepend_to_symbol = $(call _trace,($0): symbol:[$1] value:[$2])$(eval $(call m_util_prepend_to_symbol,$1,$2))
+f_util_remove_from_symbol = $(call _trace,($0): symbol:[$1] value:[$2])$(call f_util_set_symbol,$1,$(filter-out $2,$($1)))
+f_util_export_symbol = $(call _trace,($0): [$1])$(eval export $1)
+f_util_shift_symbol = $(call _trace,($0): [$1])$(call _head,$($1))$(call _set,$1,$(call _tail,$($1)))
 
 ## list and string manipulation functions
 f_util_string_equals = $(strip $(if $(findstring $(strip $1),$2),$(findstring $(strip $2),$1),))
@@ -118,13 +123,13 @@ f_util_list_head = $(firstword $1)
 f_util_list_tail = $(wordlist 2,$(words $1),$1)
 f_util_list_map = $(foreach _item,$1,$(call $2,$(_item)))
 f_util_list_get = $(word $1,$2)
-f_util_list_get_first = $(call f_util_list_head,$1)
+f_util_list_get_first = $(call _head,$1)
 f_util_list_get_last = $(word $(words $1),$1)
 
 #   integer operations
 # write incremented value to symbol $1
 define f_util_int_increment =
-    $(call f_util_set_symbol,$1,$(call inc,$($1)))
+    $(call _set,$1,$(call inc,$($1)))
 endef
 # read symbol value and then increment
 define f_util_int_get_increment =

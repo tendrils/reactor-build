@@ -56,63 +56,63 @@ define f_core_scope_push_frame =
     $(call f_util_set_symbol,_scope,$(call f_util_list_head,$(rebuild_scopes)))
 endef
 define f_core_scope_pop =
-    $(call f_util_log_trace,($0): _scope:[$(_scope)])
+    $(call _trace,($0): _scope:[$(_scope)])
     $(call f_util_drop_first_item,rebuild_scopes)
-    $(call f_util_set_symbol,_scope,$(call f_util_list_head,$(rebuild_scopes)))
+    $(call _set,_scope,$(call f_util_list_head,$(rebuild_scopes)))
     $(call f_util_int_decrement,rebuild_scope_id_next)
 endef
 #   variable operations
 ##  init operations: 
 define f_core_var_init =
-    $(call f_util_log_trace,($0): id:[$1], type:[$2], value:[$3])
+    $(call _trace,($0): id:[$1], type:[$2], value:[$3])
     $(call f_core_var_init_for_scope,$(_scope),$1,$2,$3)
 endef
 define f_core_var_deinit =
-    $(call f_util_log_trace,($0): id:[$1])
+    $(call _trace,($0): id:[$1])
     $(call f_core_var_deinit_for_scope,$(_scope),$1)
 endef
 define f_core_var_init_global =
-    $(call f_util_log_trace,($0): id:[$1], type:[$2], value:[$3])
+    $(call _trace,($0): id:[$1], type:[$2], value:[$3])
     $(call f_core_var_init_for_scope,global,$1,$2,$3)
 endef
 define f_core_var_deinit_global =
-    $(call f_util_log_trace,($0): id:[$1])
+    $(call _trace,($0): id:[$1])
     $(call f_core_var_deinit_for_scope,global,$1)
 endef
 define f_core_var_init_for_scope =
-    $(call f_util_log_trace,($0): scope:[$1] id:[$2], type:[$3], value:[$4])
-    $(call f_util_append_to_symbol,rebuild_scope_vars__$1,$2)
+    $(call _trace,($0): scope:[$1] id:[$2], type:[$3], value:[$4])
+    $(call _append,rebuild_scope_vars__$1,$2)
     $(call f_core_var_set_for_scope,$1,$2,$3,$4)
 endef
 define f_core_var_deinit_for_scope =
-    $(call f_util_log_trace,($0): scope:[$1] id:[$2])
-    $(call f_util_remove_from_symbol,rebuild_scope_vars__$1,$2)
+    $(call _trace,($0): scope:[$1] id:[$2])
+    $(call _shift,rebuild_scope_vars__$1,$2)
     $(call f_core_var_unset_for_scope,$1,$2)
 endef
 ##  set operations:
 define f_core_var_set =
-    $(call f_util_log_trace,($0): id:[$1], type:[$2], value:[$3])
+    $(call _trace,($0): id:[$1], type:[$2], value:[$3])
     $(call f_core_var_set_for_scope,$(_scope),$1,$2:$3)
 endef
 define f_core_var_unset =
-    $(call f_util_log_trace,($0): id:[$1])
+    $(call _trace,($0): id:[$1])
     $(call f_core_var_unset_for_scope,$(_scope),$1)
 endef
 define f_core_var_set_global =
-    $(call f_util_log_trace,($0): id:[$1], type:[$2], value:[$3])
+    $(call _trace,($0): id:[$1], type:[$2], value:[$3])
     $(call f_core_var_set_for_scope,global,$1,$2:$3)
 endef
 define f_core_var_unset_global =
-    $(call f_util_log_trace,($0): id:[$1])
+    $(call _trace,($0): id:[$1])
     $(call f_core_var_unset_for_scope,global,$1)
 endef
 define f_core_var_set_for_scope =
-    $(call f_util_log_trace,($0): scope:[$1] id:[$2], type:[$3], value:[$4])
-    $(call f_util_set_symbol,rebuild_var__$1__$2,$3:$4)
+    $(call _trace,($0): scope:[$1] id:[$2], type:[$3], value:[$4])
+    $(call _set,rebuild_var__$1__$2,$3:$4)
 endef
 define f_core_var_unset_for_scope =
-    $(call f_util_log_trace,($0): scope:[$1] id:[$2])
-    $(call f_util_unset_symbol,rebuild_var__$1__$2)
+    $(call _trace,($0): scope:[$1] id:[$2])
+    $(call _clear,rebuild_var__$1__$2)
 endef
 ##  get operations:
 define f_core_var_get =
@@ -143,7 +143,6 @@ define f_core_var_get_header_for_scope =
     $(call f_core_val_get_header,$(call f_core_var_get_raw_for_scope,$1,$2))
 endef
 define f_core_var_get_raw_for_scope =
-    $(call f_util_log_trace,($0): var_id:[$1], scope_id:[$2])
     $($(call f_core_var_id,$1,$2))
 endef
 define f_core_var_id =
@@ -152,10 +151,10 @@ endef
 
 #   variable predicates
 define f_core_var_format_is_p =
-    $(call f_util_string_equals,
+    $(call _equals,
         $(call f_core_var_get_format,$1),$2)
 endef
 define f_core_var_type_is_p =
-    $(call f_util_string_equals,
+    $(call _equals,
         $(call f_core_var_get_type,$1),$2)
 endef
